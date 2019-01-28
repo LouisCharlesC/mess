@@ -24,28 +24,28 @@ namespace mess {
 	class Broker
 	{
 		template<std::size_t Topic>
-		using CallbackType = std::function<void(const PayloadType<Topic>&)>;
+		using Callback = std::function<void(const PayloadType<Topic>&)>;
 
 		template<std::size_t Topic>
 		struct TopicInfo
 		{
-			std::vector<CallbackType<Topic>> callbacks;
+			std::vector<Callback<Topic>> callbacks;
 		};
 
 		template<std::size_t Index, std::size_t Size, typename... Elements>
-		struct MakeBillboardTuple
+		struct MakeBillboard
 		{
 			static_assert(Size != 0, "no good");
-			using type = typename MakeBillboardTuple<Index+1, Size, Elements..., TopicInfo<Index>>::type;
+			using type = typename MakeBillboard<Index+1, Size, Elements..., TopicInfo<Index>>::type;
 		};
 		template<std::size_t Size, typename... Elements>
-		struct MakeBillboardTuple<Size, Size, Elements...>
+		struct MakeBillboard<Size, Size, Elements...>
 		{
 			using type = std::tuple<Elements...>;
 		};
 
 		template<std::size_t Size>
-		using BillboardTuple = typename MakeBillboardTuple<0, Size>::type;
+		using Billboard = typename MakeBillboard<0, Size>::type;
 
 	public:
 		template<std::size_t Topic, typename... Args>
@@ -79,7 +79,7 @@ namespace mess {
 			static_assert(Topic<NbrOfTopics, "Function template argument Topic must be lower than class template argument NbrOfTopics");
 		}
 
-		BillboardTuple<NbrOfTopics> m_billboard;
+		Billboard<NbrOfTopics> m_billboard;
 	};
 }  // namespace mess
 

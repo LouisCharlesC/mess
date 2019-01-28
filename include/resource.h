@@ -1,5 +1,5 @@
 /*
- * localressources.h
+ * resource.h
  *
  *  Created on: Oct 11, 2018
  *      Author: lcc
@@ -8,117 +8,43 @@
 #ifndef RESOURCE_H_
 #define RESOURCE_H_
 
+#include "lockonce.hpp"
 #include "pushlist.h"
+#include "safe.hpp"
+#include "spinmutex.hpp"
 
 #include <algorithm>
-#include <atomic>
-#include <memory>
+#include <chrono>
 #include <mutex>
-#include <thread>
-#include <utility>
-#include <vector>
 
-namespace safe {
+namespace mess {
 	template<typename ResourceType>
 	class Resource
 	{
-//	using ResourceType = int;
-
-	struct SetFlag {};
-	struct ClearFlag {};
-  struct FlagAndResource
-	{
-  	std::atomic_flag flag;
-  	ResourceType resource;
-  	template<typename... Args>
-  	FlagAndResource(SetFlag, Args&&... args): resource(std::forward<Args>(args)...) {flag.clear();}
-  	template<typename... Args>
-  	FlagAndResource(ClearFlag, Args&&... args): resource(std::forward<Args>(args)...) {flag.test_and_set();}
-	};
+		using SafeResource = safe::Safe<ResourceType, SpinMutex>;
 
 	public:
-		class Handle
+		using Handle = typename SafeResource::template Access<LockOnce>;
+
+		Handle get()
 		{
-		public:
-			Handle(FlagAndResource& m_flagAndResource):
-				m_flagAndResource(&m_flagAndResource)
-			{}
-			Handle(const Handle&) = delete;
-			Handle(Handle&& other):
-				m_flagAndResource(other.m_flagAndResource)
+			auto entry = std::find_if(m_resources.begin(), m_resources.end(), [](SafeResource& safeResource){return safeResource.lockable().try_lock();});
+			if (entry == m_resources.endSentry())
 			{
-				other.m_flagAndResource = nullptr;
+				entry = m_resources.push(std::try_to_lock);
 			}
-			Handle& operator =(const Handle&) = delete;
-			Handle& operator =(Handle&& other)
-			{
-				if (m_flagAndResource)
-				{
-					m_flagAndResource->flag.clear();
-				}
-				m_flagAndResource = other.m_flagAndResource;
-				other.m_flagAndResource = nullptr;
-				return *this;
-			}
-			~Handle()
-			{
-				if (m_flagAndResource)
-				{
-					m_flagAndResource->flag.clear();
-				}
-			}
-
-	    const ResourceType* operator->() const noexcept
-			{
-				return &m_flagAndResource->resource;
-			}
-	    ResourceType* operator->() noexcept
-			{
-				return &m_flagAndResource->resource;
-			}
-	    const ResourceType& operator*() const noexcept
-			{
-				return m_flagAndResource->resource;
-			}
-	    ResourceType& operator*() noexcept
-			{
-				return m_flagAndResource->resource;
-			}
-
-		private:
-			FlagAndResource* m_flagAndResource;
-		};
-
-		template<typename... Args>
-    Handle get(Args&&... args)
-    {
-			auto entry = std::find_if(m_flagAndResources.begin(), m_flagAndResources.end(), [](FlagAndResource& flagAndResource){return !flagAndResource.flag.test_and_set();});
-      if (entry == m_flagAndResources.endSentry())
-      {
-      	entry = m_flagAndResources.push(SetFlag(), std::forward<Args>(args)...);
-      }
-      return {*entry};
-    }
+			return Handle(entry->unsafe(), entry->lockable(), std::adopt_lock);
+		}
 
 		template<typename... Args>
 		void push(Args&&... args)
 		{
-			m_flagAndResources.push(ClearFlag(), std::forward<Args>(args)...);
-		}
-
-		template<typename... Args>
-		void push_n(std::size_t n, const ResourceType& resource)
-		{
-			for (; n != 0; --n)
-			{
-				m_flagAndResources.push(ClearFlag(), resource);
-			}
+			m_resources.push(safe::default_construct_lockable, std::forward<Args>(args)...);
 		}
 
 	private:
-		PushList<FlagAndResource> m_flagAndResources;
+		PushList<safe::Safe<ResourceType, SpinMutex>> m_resources;
 	};
-
-}  // namespace safe
+}	// namespace mess
 
 #endif /* RESOURCE_H_ */

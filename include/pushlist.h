@@ -13,7 +13,7 @@
 #include <memory>
 #include <utility>
 
-namespace safe {
+namespace mess {
 	template<typename ValueType>
 	class PushList
 	{
@@ -246,6 +246,6 @@ namespace safe {
 	private:
 		std::atomic<Node*> m_begin;
 	};
-}  // namespace safe
+}  // namespace mess
 
 #endif /* PUSH_LIST_H_ */

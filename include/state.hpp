@@ -8,55 +8,34 @@
 #ifndef STATE_H_
 #define STATE_H_
 
+#include "safe.hpp"
+
 #include <memory>
 #include <mutex>
 #include <utility>
-#include "../include/safe.hpp"
 
-namespace safe {
+namespace mess {
 	template<typename ValueType>
 	class State
 	{
-		using Guard = typename safe::Safe<std::shared_ptr<ValueType>>::Guard;
-		using ConstGuard = typename safe::Safe<std::shared_ptr<ValueType>>::ConstGuard;
-		using Lock = typename safe::Safe<std::shared_ptr<ValueType>>::Lock;
-		using ConstLock = typename safe::Safe<std::shared_ptr<ValueType>>::ConstLock;
-
+		using SafeStateType = safe::Safe<std::shared_ptr<ValueType>>;
 	public:
 		/**
 		 * @brief The result of calling get() on a State variable. The Handle is a pointer
 		 * to the value of the State variable at the moment you called get(), yet, the is
 		 * guaranteed not to change during the course of the Handle's lifetime.
 		 */
-		class Handle
-		{
-		public:
-			Handle(const std::shared_ptr<ValueType>& state):
-				m_state(state)
-			{}
-
-	    const ValueType* operator->() const noexcept
-	    {
-	    	return m_state.get();
-	    }
-	    const ValueType& operator*() const noexcept
-	    {
-	    	return *m_state;
-	    }
-
-		private:
-			std::shared_ptr<ValueType> m_state;
-		};
+    using Handle = std::shared_ptr<const ValueType>;
 
 		template<typename... Args>
 		State(Args&&... args):
-			m_safeState(m_mutex, std::make_shared<ValueType>(std::forward<Args>(args)...))
+			m_safeState(safe::default_construct_lockable, std::make_shared<ValueType>(std::forward<Args>(args)...))
 		{}
 
 		template<typename... Args>
 		void set(Args&&... args)
 		{
-			Guard&& state = m_safeState.guard();
+			safe::LockGuard<SafeStateType> state(m_safeState);
 
 			// If Handles on the State do exist
 			if (!state->unique())
@@ -71,9 +50,9 @@ namespace safe {
 			}
 		}
 
-		typename safe::Safe<ValueType>::Guard update()
+		safe::LockGuard<SafeStateType> update()
 		{
-			auto state = m_safeState.unique_lock();
+			safe::UniqueLock<SafeStateType> state(m_safeState);
 
 			// If Handles on the State do exist
 			if (!state->unique())
@@ -83,18 +62,17 @@ namespace safe {
 			}
 
 			// return a safe guard of the State's value
-			return {*state.lock.release(), **state, std::adopt_lock_t()};
+			return {*state, *state.lock.release(), std::adopt_lock};
 		}
 
 		Handle get() const
 		{
-			return {*m_safeState.guard()};
+			return std::const_pointer_cast<const ValueType>(*safe::LockGuard<SafeStateType, safe::ReadOnly>(m_safeState));
 		}
 
 	private:
-		std::mutex m_mutex;
-		mutable safe::Safe<std::shared_ptr<ValueType>> m_safeState;
+		SafeStateType m_safeState;
 	};
-}  // namespace safe
+}  // namespace mess
 
 #endif /* STATE_H_ */
