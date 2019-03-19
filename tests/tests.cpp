@@ -1,6 +1,6 @@
 /**
  * @file tests.cpp
- * @author LCC (you@domain.com)
+ * @author L.-C. C.
  * @brief 
  * @version 0.1
  * @date 2018-12-17

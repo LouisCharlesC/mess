@@ -11,18 +11,19 @@
 
 #include <atomic>
 #include <mutex>
+#include <thread>
 
 namespace mess
 {
-	struct set_flag_t {};
-	static constexpr set_flag_t set_flag;
+	struct lock_on_construction_t {};
+	static constexpr lock_on_construction_t lock_on_construction;
 
 	class SpinMutex
 	{
 	public:
 		SpinMutex() = default;
 
-		SpinMutex(std::try_to_lock_t)
+		SpinMutex(lock_on_construction_t)
 		{
 			m_flag.test_and_set();
 		}
@@ -30,7 +31,9 @@ namespace mess
 		void lock()
 		{
 			while (m_flag.test_and_set())
-			{}
+			{
+				std::this_thread::yield();
+			}
 		}
 		bool try_lock()
 		{

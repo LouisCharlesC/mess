@@ -26,14 +26,16 @@ namespace mess {
 	public:
 		using Handle = typename SafeResource::template Access<LockOnce>;
 
-		Handle get()
+		template<typename... Args>
+		Handle get(Args&&... args)
 		{
 			auto entry = std::find_if(m_resources.begin(), m_resources.end(), [](SafeResource& safeResource){return safeResource.lockable().try_lock();});
+			// here a lockable is locked without a lock to manage it, do not throw untill the return line!
 			if (entry == m_resources.endSentry())
 			{
-				entry = m_resources.push(std::try_to_lock);
+				entry = m_resources.push(lock_on_construction, std::forward<Args>(args)...);
 			}
-			return Handle(entry->unsafe(), entry->lockable(), std::adopt_lock);
+			return Handle(*entry, std::adopt_lock);
 		}
 
 		template<typename... Args>

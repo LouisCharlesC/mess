@@ -11,6 +11,7 @@
 #include "safe.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <condition_variable>
 #include <cstdint>
 #include <functional>
@@ -20,6 +21,8 @@
 #include <vector>
 
 namespace mess {
+	using ExecutableWork = std::function<void()>;
+
 	template<typename WorkQueueType>
 	class WorkerPool
 	{
@@ -28,12 +31,9 @@ namespace mess {
     public:
       Worker() = delete;
       Worker(WorkerPool& pool) noexcept:
-        m_thread(&WorkerPool::workerWaitLoop, std::ref(pool))
+        m_thread(&WorkerPool::workerLoop, std::ref(pool))
       {}
       Worker(Worker&&) = default;
-      Worker(std::thread&& thread):
-        m_thread(std::move(thread))
-      {}
       Worker& operator =(Worker&&) = default;
       ~Worker() noexcept
       {
@@ -44,7 +44,7 @@ namespace mess {
       std::thread m_thread;
     };
 
-    struct WorkQueueInfo
+    struct WorkQueueAssets
     {
       WorkQueueType queue;
   		std::size_t nbrOfBusyWorkers = 0;
@@ -62,21 +62,22 @@ namespace mess {
       template<typename... Args>
       void operator()(Args&&... args)
       {
-        safe::LockGuard<safe::Safe<WorkQueueInfo>>(m_pool.m_safeWorkQueueInfo)->queue.push(std::forward<Args>(args)...);
-        m_pool.m_cv.notify_one();
+        m_pool.m_safeWorkQueue.writeAccess()->queue.push(std::forward<Args>(args)...);
+        m_pool.m_workAvailable.notify_one();
       }
 
     private:
       WorkerPool& m_pool;
     };
-    // friend WorkSubmitter;
 
     template<typename... WorkQueueConstructionArgs>
 		WorkerPool(const std::uint_fast8_t& nbrOfWorkers, WorkQueueConstructionArgs&&... args) noexcept:
-		  m_safeWorkQueueInfo(safe::default_construct_lockable, std::forward<WorkQueueConstructionArgs>(args)...),
+		  m_safeWorkQueue(safe::default_construct_lockable, std::forward<WorkQueueConstructionArgs>(args)...),
 		  m_submitter(*this)
 		{
-			m_safeWorkQueueInfo.unsafe().nbrOfBusyWorkers = nbrOfWorkers;
+			assert(nbrOfWorkers>0);
+
+			m_safeWorkQueue.unsafe().nbrOfBusyWorkers = nbrOfWorkers;
 			m_workers.reserve(nbrOfWorkers);
 			for (auto indexWorker = nbrOfWorkers; indexWorker != 0; --indexWorker)
 			{
@@ -86,55 +87,46 @@ namespace mess {
 
 		~WorkerPool() noexcept
 		{
-      safe::LockGuard<safe::Safe<WorkQueueInfo>>(m_pool.m_safeWorkQueueInfo)->stop = true;
-      m_cv.notify_all();
-		}
-
-		bool setWorkers(std::vector<std::thread>&& threads)
-		{
-		  bool success = false;
-
-			if (m_workers.empty())
-			{
-				m_workers.reserve(threads.size());
-				for (auto& thread: threads)
-				{
-					m_workers.push_back(std::move(thread));
-				}
-				threads.clear();
-
-				success = true;
-			}
-
-			return success;
+			m_safeWorkQueue.writeAccess()->stop = true;
+			m_workAvailable.notify_all();
 		}
 
 		bool isWorkOngoing() const
 		{
-			return safe::LockGuard<safe::Safe<WorkQueueInfo>>(m_pool.m_safeWorkQueueInfo)->nbrOfBusyWorkers != 0;
+			auto&& workQueueAccess = m_safeWorkQueue.readAccess();
+			return workQueueAccess->nbrOfBusyWorkers != 0;
 		}
+
+		// void waitStopped() const
+		// {
+		// 	auto workQueueAccess = m_safeWorkQueue.template readAccess<std::unique_lock>(); // lock the work queue's mutex
+		// 	m_workOngoing.wait(workQueueAccess.lock, [this](){return !this->isWorkOngoing();});
+		// }
 
     WorkSubmitter& getWorkSubmitter()
     {
       return m_submitter;
     }
 
-		void workerWaitLoop() noexcept
+		void workerLoop() noexcept
 		{
-			std::function<void()> work; // place-holder for piece of work to execute
+			ExecutableWork work; // place-holder for piece of work to execute
 			bool stop = false; // local copy of the shared stop flag
+
 			while (!stop)
 			{
-				{ // acquire lock and wait for work
-					auto workQueueInfo = safe::UniqueLock<safe::Safe<WorkQueueInfo>>(m_pool.m_safeWorkQueueInfo); // lock the work pool's mutex
-					--workQueueInfo->nbrOfBusyWorkers;
-					m_cv.wait(workQueueInfo.lock, [&workQueueInfo](){return workQueueInfo->stop || !workQueueInfo->queue.empty();});
-					stop = workQueueInfo->stop;
+				{
+					auto workQueueAccess = m_safeWorkQueue.template writeAccess<std::unique_lock>(); // lock the work queue's mutex
+					--workQueueAccess->nbrOfBusyWorkers;
+					// m_workOngoing.notify_all();
+					m_workAvailable.wait(workQueueAccess.lock, [&workQueueAccess](){return workQueueAccess->stop || !workQueueAccess->queue.empty();});
+					stop = workQueueAccess->stop;
 					if (!stop) // if we are not asked to stop, the workQueue is necessarily not empty
 					{
 						// Fetch a piece of work
-						++workQueueInfo->nbrOfBusyWorkers;
-						workQueueInfo->queue.pop(work);
+						++workQueueAccess->nbrOfBusyWorkers;
+						work = std::move(workQueueAccess->queue.top());
+						workQueueAccess->queue.pop();
 					}
 				} // release mutex
 
@@ -143,44 +135,17 @@ namespace mess {
 					work(); // execute it
 				}
 			}
+
+			m_workAvailable.notify_one();
 		}
 
 	private:
-		safe::Safe<WorkQueueInfo> m_safeWorkQueueInfo;
-		std::condition_variable m_cv;
+		safe::Safe<WorkQueueAssets> m_safeWorkQueue;
+		std::condition_variable m_workAvailable;
 		std::vector<Worker> m_workers;
 		WorkSubmitter m_submitter;
+		// std::condition_variable m_workOngoing;
 	};
-
-	template<typename WorkQueueType>
-	bool workerExecuteOne(safe::Safe<WorkQueueType>& safeWorkQueue) noexcept
-	{
-		bool empty = false;
-		std::function<void()> work;
-		{ // acquire lock and wait for work
-			auto workQueue = safeWorkQueue.unique_lock(); // lock the work pool's mutex
-			empty = workQueue->queue.empty();
-			if (!empty)
-			{
-				// Fetch a piece of work
-				workQueue->queue.pop(work);
-			}
-		} // release mutex
-
-		if (!empty) // if a piece of work was fetched
-		{
-			work(); // execute it
-		}
-		return empty;
-	}
-
-	template<typename WorkQueueType>
-	void workerExecuteAll(safe::Safe<WorkQueueType>& safeWorkQueue) noexcept
-	{
-		while (!workerExecuteOne(safeWorkQueue))
-		{}
-	}
-
 }  // namespace mess
 
 #endif /* WORKERPOOL_H_ */

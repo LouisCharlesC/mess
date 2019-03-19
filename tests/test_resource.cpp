@@ -1,10 +1,13 @@
-//============================================================================
-// Name        : testresource.cpp
-// Author      : 
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
-//============================================================================
+/**
+ * @file test_resource.cpp
+ * @author L.-C. C.
+ * @brief 
+ * @version 0.1
+ * @date 2019-03-18
+ * 
+ * @copyright Copyright (c) 2019
+ * 
+ */
 
 #include "resource.h"
 
@@ -15,10 +18,6 @@ class TestResource : public testing::Test {
 public:
 	mess::Resource<int> resource;
 };
-
-// get then get give two different resources
-// get destroy then get gives the same resource
-// push then get gives the pushed resource
 
 TEST_F(TestResource, GetThenGet) {
 	const auto res1 = resource.get();

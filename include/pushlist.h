@@ -98,7 +98,7 @@ namespace mess {
 		};
 
 		class Iterator {
-			friend ConstIterator;
+			friend class ConstIterator;
 		public:
 	    using iterator_category = std::forward_iterator_tag;
 	    using value_type = ValueType;

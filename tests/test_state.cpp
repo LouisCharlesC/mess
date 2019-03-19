@@ -1,10 +1,13 @@
-//============================================================================
-// Name        : localSafe.cpp
-// Author      : 
-// Version     :
-// Copyright   : Your copyright notice
-// Description : Hello World in C++, Ansi-style
-//============================================================================
+/**
+ * @file test_state.cpp
+ * @author L.-C. C.
+ * @brief 
+ * @version 0.1
+ * @date 2019-03-18
+ * 
+ * @copyright Copyright (c) 2019
+ * 
+ */
 
 #include "state.hpp"
 
@@ -17,7 +20,7 @@ public:
 		state(42)
 	{}
 
-	mess::State<int> state;
+	mess::State<std::shared_ptr<int>> state;
 };
 
 TEST_F(TestState, GetThenSet) {

@@ -1,6 +1,6 @@
 /**
  * @file lockonce.hpp
- * @author your name (you@domain.com)
+ * @author L.-C. C.
  * @brief 
  * @version 0.1
  * @date 2019-01-18
@@ -18,7 +18,8 @@ namespace mess
 	{
 		/// Inherit all constructors from std::unique_lock and delete all
 		/// those that would cause the lockable object not to be locked.
-		/// LockOnce always has the lockable object locked!
+		/// LockOnce always has the lockable object locked (unless it was
+		/// moved from)!
 		using std::unique_lock<LockableType>::unique_lock;
 		LockOnce(LockableType& m, std::try_to_lock_t tag) = delete;
 		LockOnce(LockableType& m, std::defer_lock_t tag) = delete;
