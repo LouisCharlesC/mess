@@ -29,5 +29,8 @@ find_package(GTest REQUIRED)
 include_directories(include)
 include_directories(external/safe/include)
 
-add_executable(tests tests/tests.cpp tests/test_state.cpp tests/test_resource.cpp tests/test_broker.cpp tests/test_workerpool.cpp tests/test_staticbroker.cpp)
+add_executable(tests tests/tests.cpp tests/test_state.cpp tests/test_resource.cpp tests/test_broker.cpp tests/test_workerpool.cpp)
 target_link_libraries(tests gtest gmock ${CMAKE_THREAD_LIBS_INIT})
+
+add_executable(example example/main.cpp)
+target_link_libraries(example ${CMAKE_THREAD_LIBS_INIT})

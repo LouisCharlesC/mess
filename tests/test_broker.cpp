@@ -1,94 +1,65 @@
 /**
- * @file test_broker.cpp
+ * @file test_staticbroker.cpp
  * @author L.-C. C.
  * @brief 
  * @version 0.1
- * @date 2019-03-18
+ * @date 2019-03-19
  * 
  * @copyright Copyright (c) 2019
  * 
  */
 
-#include "broker.h"
+#include "brokertemplate.hpp"
+#include "subscribemacros.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-/// Test for scoped enums
-enum class ScopedTopics: std::size_t
+class FirstSubscriber;
+class SecondSubscriber;
+enum class Subscribers
 {
-	FirstScopedTopic,
-	SecondScopedTopic
+	FirstSubscriber,
+	SecondSubscriber
 };
-/// Also test for unscoped enums
-enum Topics: std::size_t
+using Broker = mess::BrokerTemplate<FirstSubscriber, SecondSubscriber>;
+
+struct CamImageTopic
 {
-	FirstTopic = 0,
-	SecondTopic,
-	Count
+	using Message = int;
+	static constexpr bool IsCacheEnabled = false;
 };
-/// Test for specialized callbacks
-static auto callbackLambda = [](const int& i){std::cout << "Got message " << i << " on topic ScopedTopics::FirstScopedTopic" << std::endl;};
-void callbackFreeFunction(const float& j) {std::cout << "Got message " << j << " on topic ScopedTopics::SecondScopedTopic" << std::endl;}
-
-namespace mess
+struct MicSoundTopic
 {
-	/// Specializations for ScopedTopics::FirstScopedTopic
-	template<>
-	struct Message<ScopedTopics, ScopedTopics::FirstScopedTopic>
+	using Message = float;
+	static constexpr bool IsCacheEnabled = false;
+};
+
+class FirstSubscriber
+{
+public:
+	void onPublish(const CamImageTopic::Message& message, CamImageTopic)
 	{
-		using type = int;
-	};
-	template<>
-	struct PullCapability<ScopedTopics, ScopedTopics::FirstScopedTopic>: PullEnabled_t {};
-	template<>
-	struct Callback<ScopedTopics, ScopedTopics::FirstScopedTopic>
-	{
-		using type = decltype(callbackLambda);
-	};
-	template<>
-	constexpr std::size_t Count<ScopedTopics>()
-	{
-		return 2;
+		std::cout << "published to cam image topic, received by first subscriber" << std::endl;
 	}
-	/// Specialization for ScopedTopics::FirstScopedTopic
-	template<>
-	struct Message<ScopedTopics, ScopedTopics::SecondScopedTopic>
-	{
-		using type = float;
-	};
+};
+MESS_SUBSCRIBE_TAG(FirstSubscriber, CamImageTopic)
 
-	/// Specializations for unscoped Topics
-	template<>
-	struct Message<Topics, FirstTopic>
-	{
-		using type = float;
-	};
-	template<>
-	struct Message<Topics, SecondTopic>
-	{
-		using type = float;
-	};
+class SecondSubscriber
+{
 
-}
+};
 
-TEST(EnumPack, bla) {
-	constexpr int i = 42;
-	constexpr float j = 42.f;
+TEST(stttta, ticcc)
+{
+	FirstSubscriber first;
+	SecondSubscriber second;
 
-	mess::MasterBroker<Topics, ScopedTopics> mbroker;
-	auto broker = mbroker.make_broker<Topics, ScopedTopics>();
-	{
-		auto firstGroupBroker = mbroker.make_broker<Topics>();
-		auto lastGroupBroker = mbroker.make_broker<ScopedTopics>();
-		auto reverseBroker = mbroker.make_broker<ScopedTopics, Topics>();
-	}
+	Broker::subscriber<Subscribers, Subscribers::FirstSubscriber>(first);
+	Broker::subscriber<Subscribers, Subscribers::SecondSubscriber>(second);
 
-	broker.subscribe<ScopedTopics, ScopedTopics::FirstScopedTopic>(callbackLambda);
-	broker.subscribe<ScopedTopics, ScopedTopics::SecondScopedTopic>(callbackFreeFunction);
+	CamImageTopic::Message image = 42;
+	MicSoundTopic::Message sound = 24.f;
 
-	broker.push<ScopedTopics, ScopedTopics::FirstScopedTopic>(i);
-	const int iPull = broker.pull<ScopedTopics, ScopedTopics::FirstScopedTopic>().get();
-	EXPECT_EQ(i, iPull);
-	broker.push<ScopedTopics, ScopedTopics::SecondScopedTopic>(j);
+	Broker::publish<CamImageTopic>(image);
 }

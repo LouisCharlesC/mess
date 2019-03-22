@@ -5,8 +5,7 @@
  *      Author: lcc
  */
 
-#ifndef PUSH_LIST_H_
-#define PUSH_LIST_H_
+#pragma once
 
 #include <atomic>
 #include <iterator>
@@ -247,5 +246,3 @@ namespace mess {
 		std::atomic<Node*> m_begin;
 	};
 }  // namespace mess
-
-#endif /* PUSH_LIST_H_ */

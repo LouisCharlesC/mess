@@ -5,8 +5,7 @@
  *      Author: lcc
  */
 
-#ifndef WORKERPOOL_H_
-#define WORKERPOOL_H_
+#pragma once
 
 #include "safe.hpp"
 
@@ -147,5 +146,3 @@ namespace mess {
 		// std::condition_variable m_workOngoing;
 	};
 }  // namespace mess
-
-#endif /* WORKERPOOL_H_ */

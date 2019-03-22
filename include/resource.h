@@ -5,8 +5,7 @@
  *      Author: lcc
  */
 
-#ifndef RESOURCE_H_
-#define RESOURCE_H_
+#pragma once
 
 #include "lockonce.hpp"
 #include "pushlist.h"
@@ -48,5 +47,3 @@ namespace mess {
 		PushList<safe::Safe<ResourceType, SpinMutex>> m_resources;
 	};
 }	// namespace mess
-
-#endif /* RESOURCE_H_ */

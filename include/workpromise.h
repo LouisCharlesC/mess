@@ -5,8 +5,7 @@
  *      Author: lcc
  */
 
-#ifndef WORKPROMISE_H_
-#define WORKPROMISE_H_
+#pragma once
 
 #include <functional>
 #include <future>
@@ -52,5 +51,3 @@ namespace mess {
 		wp.m_promise.set_value();
 	}
 }  // namespace mess
-
-#endif /* WORKPROMISE_H_ */
