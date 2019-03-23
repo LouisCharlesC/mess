@@ -19,6 +19,7 @@ struct SensorTopic
 	using Message = std::uint64_t;
 	static constexpr bool IsCacheEnabled = true;
 };
+class Sensor;
 struct GetPeriodService
 {
 	using ReturnType = std::chrono::milliseconds;
