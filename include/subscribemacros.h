@@ -11,22 +11,21 @@
 
 #pragma once
 
-#define MESS_SUBSCRIBE_TEMPLATE(Subscriber, Topic) \
-namespace mess \
-{ \
-	template<> \
-	void onPublish<Topic, Subscriber>(const Topic::Message& message, Subscriber& subscriber) \
-	{ \
-		subscriber.onPublish<Topic>(message); \
-	} \
-}
-
-#define MESS_SUBSCRIBE_TAG(Subscriber, Topic) \
+#define MESS_SUBSCRIBE(Subscriber, Topic) \
 namespace mess \
 { \
 	template<> \
 	void onPublish<Topic, Subscriber>(const Topic::Message& message, Subscriber& subscriber) \
 	{ \
 		subscriber.onPublish(message, Topic()); \
+	} \
+}
+#define MESS_SUBSCRIBE_NOTIFICATION(Subscriber, Topic) \
+namespace mess \
+{ \
+	template<> \
+	void onNotify<Topic, Subscriber>(Subscriber& subscriber) \
+	{ \
+		subscriber.onNotify(Topic()); \
 	} \
 }

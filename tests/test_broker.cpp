@@ -43,7 +43,7 @@ public:
 		std::cout << "published to cam image topic, received by first subscriber" << std::endl;
 	}
 };
-MESS_SUBSCRIBE_TAG(FirstSubscriber, CamImageTopic)
+MESS_SUBSCRIBE(FirstSubscriber, CamImageTopic)
 
 class SecondSubscriber
 {

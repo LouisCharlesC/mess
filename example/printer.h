@@ -30,9 +30,13 @@ public:
 		{
 			std::cout << "Sensor data: " << Broker::cache<SensorTopic>().get() << std::endl;
 		}
+		else if (stdcinData == "g")
+		{
+			std::cout << "Sensor period: " << Broker::call<GetPeriodService>().count() << " ms" << std::endl;
+		}
 	}
 
 private:
 	mess::State<SensorTopic::Message> m_sensorData;
 };
-MESS_SUBSCRIBE_TAG(Printer, StdcinTopic)
+MESS_SUBSCRIBE(Printer, StdcinTopic)

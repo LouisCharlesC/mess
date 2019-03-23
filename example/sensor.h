@@ -23,16 +23,21 @@
 class Sensor
 {
 public:
-	void onPublish(const QuitTopic::Message& quit, QuitTopic)
+	void onNotify(QuitTopic)
 	{
-		m_quit = quit;
+		m_quit = true;
+	}
+
+	GetPeriodService::ReturnType onCall(GetPeriodService)
+	{
+		return m_period;
 	}
 
 	void loop()
 	{
 		while(!m_quit)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(m_period);
         ++m_data;
 				Broker::publish<SensorTopic>(m_data);
     }
@@ -41,5 +46,7 @@ public:
 private:
 	std::atomic<bool> m_quit = ATOMIC_VAR_INIT(false);
 	SensorTopic::Message m_data = 0;
+	std::chrono::milliseconds m_period = std::chrono::milliseconds(10);
 };
-MESS_SUBSCRIBE_TAG(Sensor, QuitTopic)
+MESS_SUBSCRIBE_NOTIFICATION(Sensor, QuitTopic)
+// MESS_ADVERTIZE_TAG(GetPeriodService)

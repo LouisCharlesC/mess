@@ -20,22 +20,21 @@
 
 // TODO:	count subscribers ?
 //				allow asking the template for the subscribers types ?
-//				allow notify ?
-//				allow service calls ?
+//				detect multiple service providers ? allow multiple providers and return an array ?
 
 namespace mess
 {
 	template<typename Topic, typename Subscriber>
 	void onPublish(const typename Topic::Message&, Subscriber& subscriber)
 	{}
-	// template<typename Topic, typename Subscriber>
-	// void onNotify(Subscriber& subscriber)
-	// {}
+	template<typename Topic, typename Subscriber>
+	void onNotify(Subscriber& subscriber)
+	{}
 
 	template<typename... SubscribersTypes>
 	class BrokerTemplate
 	{
-		using Subscribers = std::tuple<SubscribersTypes...>;
+		using SubscribersTuple = std::tuple<SubscribersTypes...>;
 		using SubscribersPtrs = std::tuple<SubscribersTypes*...>;
 		template<typename MessageType>
 		using CacheType = State<MessageType>;
@@ -44,34 +43,37 @@ namespace mess
 		BrokerTemplate() = delete;
 
 		template<typename SubscribersEnum, SubscribersEnum Subscriber>
-		static void subscriber(typename std::tuple_element<static_cast<std::size_t>(Subscriber), Subscribers>::type& ref)
+		static void subscriber(typename std::tuple_element<static_cast<std::size_t>(Subscriber), SubscribersTuple>::type& ref)
 		{
 			assert(std::get<static_cast<std::size_t>(Subscriber)>(m_subscribers) == nullptr);
 			std::get<static_cast<std::size_t>(Subscriber)>(m_subscribers) = &ref;;
 		}
 		template<std::size_t SubscriberIndex>
-		static void subscriber(typename std::tuple_element<SubscriberIndex, Subscribers>::type& ref)
+		static void subscriber(typename std::tuple_element<SubscriberIndex, SubscribersTuple>::type& ref)
 		{
 			assert(std::get<SubscriberIndex>(m_subscribers) == nullptr);
 			std::get<SubscriberIndex>(m_subscribers) = &ref;
 		}
 
-		// template<typename Service, typename... Args>
-		// static typename Service::ReturnType call(Args&&... args)
-		// {
-
-		// }
-		
-		// template<typename Topic>
-		// static void notify()
-		// {
-		// 	notify<Topic>(build_indices<sizeof...(SubscribersTypes)>());
-		// }
-		
 		template<typename Topic>
 		static void publish(const typename Topic::Message& message)
 		{
-			publish<Topic>(std::integral_constant<bool, Topic::IsCacheEnabled>(), message, build_indices<sizeof...(SubscribersTypes)>());
+			publish<Topic>(std::integral_constant<bool, Topic::IsCacheEnabled>(), message);
+		}
+		template<typename Topic>
+		static void publish(typename Topic::Message&& message)
+		{
+			publish<Topic>(std::integral_constant<bool, Topic::IsCacheEnabled>(), std::move(message));
+		}
+		template<typename Topic>
+		static void notify()
+		{
+			dispatcher<>::template notify<Topic>();
+		}
+		template<typename Service, typename... Args>
+		static typename Service::ReturnType call(Args&&... args)
+		{
+			return caller<Service>::call(args...);
 		}
 		
 		template<typename Topic>
@@ -89,82 +91,76 @@ namespace mess
 			return cache;
 		}
 
-	  template <std::size_t... Indices>
-		struct indices {};
-
-		template <std::size_t To, std::size_t Current=0, std::size_t... Indices>
-		struct build_indices : build_indices<To, Current+1, Indices..., Current> {};
-
-		template <std::size_t To, std::size_t... Indices>
-		struct build_indices<To, To, Indices...> : indices<Indices...> {};
-
-		template<typename Topic, std::size_t... Indices>
-		static void publish(std::true_type, const typename Topic::Message& message, indices<Indices...>)
+		template<typename Topic>
+		static void publish(std::true_type, const typename Topic::Message& message)
 		{
+			publish<Topic>(std::false_type(), message);
 			getCache<Topic>().set(message);
-			publish<Topic>(std::false_type(), message, indices<Indices...>());
 		}
-		template<typename Topic, std::size_t... Indices>
-		static void publish(std::false_type, const typename Topic::Message& message, indices<Indices...>)
+		template<typename Topic>
+		static void publish(std::false_type, const typename Topic::Message& message)
 		{
-			publisher<Indices...>::template publish<Topic>(message);
+			dispatcher<>::template publish<Topic>(message);
+		}
+		template<typename Topic>
+		static void publish(std::true_type, typename Topic::Message&& message)
+		{
+			publish<Topic>(std::false_type(), message);
+			getCache<Topic>().set(std::move(message));
 		}
 
-		template<std::size_t CurrentIndex, std::size_t... OtherIndices>
-		struct publisher
+		template<bool=true, std::size_t CurrentIndex=0>
+		struct dispatcher
 		{
 			template<typename Topic>
 			static void publish(const typename Topic::Message& message)
 			{
 				assert(std::get<CurrentIndex>(m_subscribers) != nullptr);
-				publisher<CurrentIndex>::template publish<Topic>(message);
-				publisher<OtherIndices...>::template publish<Topic>(message);
+				::mess::onPublish<Topic>(message, *std::get<CurrentIndex>(m_subscribers));
+				dispatcher<true, CurrentIndex+1>::template publish<Topic>(message);
+			}
+			template<typename Topic>
+			static void notify()
+			{
+				assert(std::get<CurrentIndex>(m_subscribers) != nullptr);
+				::mess::onNotify<Topic>(*std::get<CurrentIndex>(m_subscribers));
+				dispatcher<true, CurrentIndex+1>::template notify<Topic>();
 			}
 		};
-		template<std::size_t CurrentIndex>
-		struct publisher<CurrentIndex>
+		template<bool dummy>
+		struct dispatcher<dummy, sizeof...(SubscribersTypes)>
 		{
 			template<typename Topic>
 			static void publish(const typename Topic::Message& message)
-			{
-				::mess::onPublish<Topic>(message, *std::get<CurrentIndex>(m_subscribers));
-			}
+			{}
+			template<typename Topic>
+			static void notify()
+			{}
 		};
 
-		// static SubscribersPtrs initialize()
-		// {
-		// 	SubscribersPtrs subscribers;
-		// 	initialize(subscribers, build_indices<sizeof...(SubscribersTypes)>());
-		// 	return subscribers;
-		// }
-		// template<std::size_t... Indices>
-		// static void initialize(SubscribersPtrs& subscribers, indices<Indices...>)
-		// {
-		// 	initializer<Indices...>::initialize(subscribers);
-		// }
-
-		// template<std::size_t CurrentIndex, std::size_t... OtherIndices>
-		// struct initializer
-		// {
-		// 	static void initialize(SubscribersPtrs& subscribers)
-		// 	{
-		// 		initializer<CurrentIndex>::initialize(subscribers);
-		// 		initializer<OtherIndices...>::initialize(subscribers);
-		// 	}
-		// };
-		// template<std::size_t CurrentIndex>
-		// struct initializer<CurrentIndex>
-		// {
-		// 	static void initialize(SubscribersPtrs& subscribers)
-		// 	{
-		// 		std::get<CurrentIndex>(subscribers) = ;
-		// 	}
-		// };
+		template<typename Service, std::size_t CurrentIndex=0, typename Provider=typename Service::Provider>
+		struct caller
+		{
+			template<typename... Args>
+			static typename Service::ReturnType call(Args&&... args)
+			{
+				return caller<Service, CurrentIndex+1>::call(std::forward<Args>(args)...);
+			}
+		};
+		template<typename Service, std::size_t CurrentIndex>
+		struct caller<Service, CurrentIndex, typename std::tuple_element<CurrentIndex, SubscribersTuple>::type>
+		{
+			template<typename... Args>
+			static typename Service::ReturnType call(Args&&... args)
+			{
+				return std::get<CurrentIndex>(m_subscribers)->onCall(std::forward<Args>(args)..., Service());
+			}
+		};
 
 		static SubscribersPtrs m_subscribers;
 	};
 
 	template<typename... SubscribersTypes>
-	typename BrokerTemplate<SubscribersTypes...>::SubscribersPtrs BrokerTemplate<SubscribersTypes...>::m_subscribers;// = BrokerTemplate<SubscribersTypes...>::initialize();
+	typename BrokerTemplate<SubscribersTypes...>::SubscribersPtrs BrokerTemplate<SubscribersTypes...>::m_subscribers;
 }
 

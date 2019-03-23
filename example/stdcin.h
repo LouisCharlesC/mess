@@ -31,7 +31,7 @@ public:
 			quit = m_stdcinData == "q";
 			if (quit)
 			{
-				Broker::publish<QuitTopic>(true);
+				Broker::notify<QuitTopic>();
 			}
 		}
 	}

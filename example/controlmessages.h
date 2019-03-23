@@ -12,7 +12,4 @@
 #pragma once
 
 struct QuitTopic
-{
-	using Message = bool;
-	static constexpr bool IsCacheEnabled = false;
-};
+{};

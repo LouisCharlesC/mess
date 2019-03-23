@@ -11,10 +11,16 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 
 struct SensorTopic
 {
 	using Message = std::uint64_t;
 	static constexpr bool IsCacheEnabled = true;
+};
+struct GetPeriodService
+{
+	using ReturnType = std::chrono::milliseconds;
+	using Provider = Sensor;
 };
