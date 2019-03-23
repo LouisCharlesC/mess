@@ -45,8 +45,7 @@ namespace mess
 		template<typename SubscribersEnum, SubscribersEnum Subscriber>
 		static void subscriber(typename std::tuple_element<static_cast<std::size_t>(Subscriber), SubscribersTuple>::type& ref)
 		{
-			assert(std::get<static_cast<std::size_t>(Subscriber)>(m_subscribers) == nullptr);
-			std::get<static_cast<std::size_t>(Subscriber)>(m_subscribers) = &ref;;
+			subscriber<static_cast<std::size_t>(Subscriber)>(ref);
 		}
 		template<std::size_t SubscriberIndex>
 		static void subscriber(typename std::tuple_element<SubscriberIndex, SubscribersTuple>::type& ref)
