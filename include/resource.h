@@ -9,7 +9,7 @@
 
 #include "lockonce.hpp"
 #include "pushlist.h"
-#include "safe.hpp"
+#include "safe/safe.h"
 #include "spinmutex.hpp"
 
 #include <algorithm>

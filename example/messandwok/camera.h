@@ -1,9 +1,9 @@
 /**
- * @file sensor.h
+ * @file camera.h
  * @author L.-C. C.
  * @brief 
  * @version 0.1
- * @date 2019-03-21
+ * @date 2019-03-23
  * 
  * @copyright Copyright (c) 2019
  * 
@@ -12,11 +12,11 @@
 #pragma once
 
 #include "broker.h"
-#include "cameramessages.h"
-#include "subscribemacros.h"
-#include "systemmessages.h"
+#include "cameratopics.h"
+#include "systemtopics.h"
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <numeric>
 #include <thread>
@@ -36,7 +36,7 @@ public:
 		}
 	}
 
-	void onPublish(const SystemFSMTopic::Message& state, SystemFSMTopic)
+	void onPublish(SystemFSMTopic, const SystemFSMTopic::Message& state)
 	{
 		if (state == SystemFSM::Start)
 		{
@@ -50,25 +50,19 @@ public:
 		}
 	}
 
-	GetCameraPeriodService::ReturnType onCall(GetCameraPeriodService)
-	{
-		return m_period;
-	}
-
 	void loop()
 	{
 		auto nextTrigger = std::chrono::high_resolution_clock::now();
 		while(!m_quit)
     {
-				std::this_thread::sleep_until(nextTrigger);
-				nextTrigger += m_period;
-
 				CameraImageTopic::Message image = std::make_shared<CameraImageTopic::Message::element_type>();
 				std::iota(image->image.begin(), image->image.end(), m_frameId);
 				image->frameId = m_frameId;
 				++m_frameId;
 				image->timestamp = std::chrono::steady_clock::now();
 
+				nextTrigger += m_period;
+				std::this_thread::sleep_until(nextTrigger);
 				Broker::publish<CameraImageTopic>(image);
 		}
 	}
@@ -79,4 +73,3 @@ private:
 	std::uint64_t m_frameId = 0;
 	std::thread m_thread;
 };
-MESS_SUBSCRIBE(Camera, SystemFSMTopic)

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "safe.hpp"
+#include "safe/safe.h"
 
 #include <algorithm>
 #include <cassert>
@@ -25,58 +25,63 @@ namespace mess {
 	template<typename WorkQueueType>
 	class WorkerPool
 	{
-    class Worker
-    {
-    public:
-      Worker() = delete;
-      Worker(WorkerPool& pool) noexcept:
-        m_thread(&WorkerPool::workerLoop, std::ref(pool))
-      {}
-      Worker(Worker&&) = default;
-      Worker& operator =(Worker&&) = default;
-      ~Worker() noexcept
-      {
-        m_thread.join();
-      }
+		class Worker
+		{
+		public:
+			Worker() = delete;
+			Worker(WorkerPool& pool) noexcept:
+				m_thread(&WorkerPool::workerLoop, std::ref(pool))
+			{}
+			Worker(Worker&&) = default;
+			Worker& operator =(Worker&&) = default;
+			~Worker() noexcept
+			{
+				m_thread.join();
+			}
 
-    private:
-      std::thread m_thread;
-    };
+		private:
+			std::thread m_thread;
+		};
 
-    struct WorkQueueAssets
-    {
-      WorkQueueType queue;
-  		std::size_t nbrOfBusyWorkers = 0;
-      bool stop = false;
-    };
+		enum class WorkQueueState
+		{
+			Run,
+			StopWhenEmpty,
+			StopNow
+		};
+
+		struct WorkQueueAssets
+		{
+			WorkQueueType queue;
+			WorkQueueState state = WorkQueueState::Run;
+		};
 
 	public:
-    class WorkSubmitter
-    {
-    public:
-      WorkSubmitter(WorkerPool& pool):
-        m_pool(pool)
-      {}
+		class WorkSubmitter
+		{
+		public:
+			WorkSubmitter(WorkerPool& pool):
+				m_pool(pool)
+			{}
 
-      template<typename... Args>
-      void operator()(Args&&... args)
-      {
-        m_pool.m_safeWorkQueue.writeAccess()->queue.push(std::forward<Args>(args)...);
-        m_pool.m_workAvailable.notify_one();
-      }
+			template<typename... Args>
+			void operator()(Args&&... args)
+			{
+				m_pool.m_safeWorkQueue.writeAccess()->queue.push(std::forward<Args>(args)...);
+				m_pool.m_workAvailable.notify_one();
+			}
 
-    private:
-      WorkerPool& m_pool;
-    };
+		private:
+			WorkerPool& m_pool;
+		};
 
-    template<typename... WorkQueueConstructionArgs>
+		template<typename... WorkQueueConstructionArgs>
 		WorkerPool(const std::uint_fast8_t& nbrOfWorkers, WorkQueueConstructionArgs&&... args) noexcept:
-		  m_safeWorkQueue(safe::default_construct_lockable, std::forward<WorkQueueConstructionArgs>(args)...),
-		  m_submitter(*this)
+			m_safeWorkQueue(safe::default_construct_lockable, std::forward<WorkQueueConstructionArgs>(args)...),
+			m_submitter(*this)
 		{
 			assert(nbrOfWorkers>0);
 
-			m_safeWorkQueue.unsafe().nbrOfBusyWorkers = nbrOfWorkers;
 			m_workers.reserve(nbrOfWorkers);
 			for (auto indexWorker = nbrOfWorkers; indexWorker != 0; --indexWorker)
 			{
@@ -84,28 +89,29 @@ namespace mess {
 			}
 		}
 
-		~WorkerPool() noexcept
+		~WorkerPool()
 		{
-			m_safeWorkQueue.writeAccess()->stop = true;
+			stop();
+		}
+
+		WorkSubmitter& getWorkSubmitter()
+		{
+			return m_submitter;
+		}
+
+		void stop()
+		{
+			m_safeWorkQueue.writeAccess()->state = WorkQueueState::StopNow;
 			m_workAvailable.notify_all();
+			joinWorkers();
 		}
 
-		bool isWorkOngoing() const
+		void emptyAndStop()
 		{
-			auto&& workQueueAccess = m_safeWorkQueue.readAccess();
-			return workQueueAccess->nbrOfBusyWorkers != 0;
+			m_safeWorkQueue.writeAccess()->state = WorkQueueState::StopWhenEmpty;
+			m_workAvailable.notify_all();
+			joinWorkers();
 		}
-
-		// void waitStopped() const
-		// {
-		// 	auto workQueueAccess = m_safeWorkQueue.template readAccess<std::unique_lock>(); // lock the work queue's mutex
-		// 	m_workOngoing.wait(workQueueAccess.lock, [this](){return !this->isWorkOngoing();});
-		// }
-
-    WorkSubmitter& getWorkSubmitter()
-    {
-      return m_submitter;
-    }
 
 		void workerLoop() noexcept
 		{
@@ -116,14 +122,11 @@ namespace mess {
 			{
 				{
 					auto workQueueAccess = m_safeWorkQueue.template writeAccess<std::unique_lock>(); // lock the work queue's mutex
-					--workQueueAccess->nbrOfBusyWorkers;
-					// m_workOngoing.notify_all();
-					m_workAvailable.wait(workQueueAccess.lock, [&workQueueAccess](){return workQueueAccess->stop || !workQueueAccess->queue.empty();});
-					stop = workQueueAccess->stop;
+					m_workAvailable.wait(workQueueAccess.lock, [&workQueueAccess](){return isAskedToStop(*workQueueAccess) || !workQueueAccess->queue.empty();});
+					stop = isAskedToStop(*workQueueAccess);
 					if (!stop) // if we are not asked to stop, the workQueue is necessarily not empty
 					{
 						// Fetch a piece of work
-						++workQueueAccess->nbrOfBusyWorkers;
 						work = std::move(workQueueAccess->queue.top());
 						workQueueAccess->queue.pop();
 					}
@@ -134,15 +137,22 @@ namespace mess {
 					work(); // execute it
 				}
 			}
-
-			m_workAvailable.notify_one();
 		}
 
 	private:
+		static bool isAskedToStop(const WorkQueueAssets& workQueue)
+		{
+			return workQueue.state == WorkQueueState::StopNow || (workQueue.state == WorkQueueState::StopWhenEmpty && workQueue.queue.empty());;
+		}
+
+		void joinWorkers()
+		{
+			m_workers.clear();
+		}
+
 		safe::Safe<WorkQueueAssets> m_safeWorkQueue;
 		std::condition_variable m_workAvailable;
 		std::vector<Worker> m_workers;
 		WorkSubmitter m_submitter;
-		// std::condition_variable m_workOngoing;
 	};
 }  // namespace mess

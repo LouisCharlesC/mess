@@ -15,5 +15,6 @@
 
 class Printer;
 class Sensor;
+class Stdcin;
 
-using Broker = mess::BrokerTemplate<Printer, Sensor>;
+using Broker = mess::BrokerTemplate<Printer, Sensor, Stdcin>;

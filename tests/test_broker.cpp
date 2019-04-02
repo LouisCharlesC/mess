@@ -9,8 +9,8 @@
  * 
  */
 
-#include "brokertemplate.hpp"
-#include "subscribemacros.h"
+// #include "brokertemplate.hpp"
+// #include "messmacros.h"
 
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
@@ -22,7 +22,7 @@ enum class Subscribers
 	FirstSubscriber,
 	SecondSubscriber
 };
-using Broker = mess::BrokerTemplate<FirstSubscriber, SecondSubscriber>;
+// using Broker = mess::BrokerTemplate<FirstSubscriber, SecondSubscriber>;
 
 struct CamImageTopic
 {
@@ -43,7 +43,7 @@ public:
 		std::cout << "published to cam image topic, received by first subscriber" << std::endl;
 	}
 };
-MESS_SUBSCRIBE(FirstSubscriber, CamImageTopic)
+// MESS_SUBSCRIBE_PUBLICATION(FirstSubscriber, CamImageTopic)
 
 class SecondSubscriber
 {
@@ -52,14 +52,14 @@ class SecondSubscriber
 
 TEST(stttta, ticcc)
 {
-	FirstSubscriber first;
-	SecondSubscriber second;
+	// FirstSubscriber first;
+	// SecondSubscriber second;
 
-	Broker::subscriber<Subscribers, Subscribers::FirstSubscriber>(first);
-	Broker::subscriber<Subscribers, Subscribers::SecondSubscriber>(second);
+	// Broker::subscriber<Subscribers, Subscribers::FirstSubscriber>(first);
+	// Broker::subscriber<Subscribers, Subscribers::SecondSubscriber>(second);
 
-	CamImageTopic::Message image = 42;
-	MicSoundTopic::Message sound = 24.f;
+	// CamImageTopic::Message image = 42;
+	// MicSoundTopic::Message sound = 24.f;
 
-	Broker::publish<CamImageTopic>(image);
+	// Broker::publish<CamImageTopic>(image);
 }

@@ -1,5 +1,5 @@
 /**
- * @file controlmessages.h
+ * @file printer.h
  * @author L.-C. C.
  * @brief 
  * @version 0.1
@@ -11,5 +11,7 @@
 
 #pragma once
 
-struct QuitTopic
-{};
+struct Printer
+{
+	void print();
+};

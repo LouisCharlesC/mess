@@ -9,17 +9,17 @@
  * 
  */
 
-#include "broker.h" // the broker for this program is defined in here
-
+#include "broker.h"
 #include "printer.h"
 #include "stdcin.h"
 #include "sensor.h"
 
+#include <cstdlib>
 #include <thread>
 
 int main(int argc, char **argv)
 {
-	// Instantiate publishers and subscribers
+	// Instantiate subscribers, sinks and cache and service providers
 	Printer printer;
 	Sensor sensor;
 	Stdcin stdcin;
@@ -27,12 +27,7 @@ int main(int argc, char **argv)
 	// Set the subscribers instances
 	Broker::subscriber<0>(printer);
 	Broker::subscriber<1>(sensor);
-
-	std::thread stdcinThread([&stdcin](){stdcin.loop();});
-	std::thread sensorThread([&sensor](){sensor.loop();});
-
-	stdcinThread.join();
-	sensorThread.join();
+	Broker::subscriber<2>(stdcin);
 
 	return EXIT_SUCCESS;
 }

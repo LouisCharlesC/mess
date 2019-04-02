@@ -1,8 +1,18 @@
-
+/**
+ * @file monitor.h
+ * @author L.-C. C.
+ * @brief 
+ * @version 0.1
+ * @date 2019-03-23
+ * 
+ * @copyright Copyright (c) 2019
+ * 
+ */
 
 #include "broker.h"
-#include "cameramessages.h"
-#include "systemmessages.h"
+#include "cameratopics.h"
+#include "processortopics.h"
+#include "systemtopics.h"
 
 #include <atomic>
 #include <cassert>
@@ -15,49 +25,63 @@ class Monitor
 public:
 	~Monitor()
 	{
-		if (m_thread.joinable())
-		{
-			m_thread.join();
-		}
+		m_thread.join();
 	}
 
-	void onPublish(const SystemFSMTopic::Message& state, SystemFSMTopic)
+	void onPublish(SystemFSMTopic, const SystemFSMTopic::Message& state)
 	{
 		if (state == SystemFSM::Start)
 		{
+			m_timeStart = std::chrono::high_resolution_clock::now();
 			m_thread = std::thread(&Monitor::loop, this);
 		}
 		else if (state == SystemFSM::Quit)
 		{
 			assert(m_thread.joinable());
 			m_quit = true;
-			m_thread.join();
 		}
 	}
 
-	void onPublish(const CameraImageTopic::Message&, CameraImageTopic)
+	void onNotify(CameraImageTopic)
 	{
-		++m_imageCount;
+		++m_cameraImageCount;
+	}
+
+	void onNotify(ProcessorImageTopic)
+	{
+		++m_processorImageCount;
+	}
+
+	void onNotify(ProcessorImageTimedOutTopic)
+	{
+		++m_processorImageTimedOutCount;
 	}
 
 	void loop()
 	{
-		auto nextTrigger = std::chrono::steady_clock::now();
+		auto nextTrigger = std::chrono::high_resolution_clock::now();
 		while(!m_quit)
     {
-        std::this_thread::sleep_until(nextTrigger);
 				nextTrigger += m_period;
+        std::this_thread::sleep_until(nextTrigger);
 
-				std::cout << "Images received at " << static_cast<float>(1000 * m_imageCount) / static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-m_timeStart).count()) << " fps." << std::endl;
+				const float elapsed = static_cast<float>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()-m_timeStart).count());
+				std::cout << "Camera and Processor and TimedOut images received at "
+				  << static_cast<float>(1000 * m_cameraImageCount) / elapsed
+				  << ", "
+					<< static_cast<float>(1000 * m_processorImageCount) / elapsed
+				  << " and "
+					<< static_cast<float>(1000 * m_processorImageTimedOutCount) / elapsed
+					<< " fps." << std::endl;
     }
 	}
 
 private:
 	std::atomic<bool> m_quit = ATOMIC_VAR_INIT(false);
-	std::uint64_t m_imageCount = 0;
+	std::atomic<std::uint64_t> m_cameraImageCount = ATOMIC_VAR_INIT(0);
+	std::atomic<std::uint64_t> m_processorImageCount = ATOMIC_VAR_INIT(0);
+	std::atomic<std::uint64_t> m_processorImageTimedOutCount = ATOMIC_VAR_INIT(0);
 	std::chrono::milliseconds m_period = std::chrono::milliseconds(1000);
-	std::chrono::high_resolution_clock::time_point m_timeStart = std::chrono::high_resolution_clock::now();
+	std::chrono::high_resolution_clock::time_point m_timeStart;
 	std::thread m_thread;
 };
-MESS_SUBSCRIBE(Monitor, SystemFSMTopic)
-MESS_SUBSCRIBE(Monitor, CameraImageTopic)

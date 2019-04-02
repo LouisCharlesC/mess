@@ -3,7 +3,7 @@
  * @author L.-C. C.
  * @brief 
  * @version 0.1
- * @date 2019-03-21
+ * @date 2019-03-23
  * 
  * @copyright Copyright (c) 2019
  * 
@@ -14,8 +14,8 @@
 #include "brokertemplate.hpp"
 
 class Camera;
-class Filter;
-class Checker;
+class Processor;
+// class Checker;
 class Monitor;
 
-using Broker = mess::BrokerTemplate<Camera, Filter, Monitor>;
+using Broker = mess::BrokerTemplate<Camera, Processor, Monitor>;
