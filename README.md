@@ -19,7 +19,7 @@ The goal of *mess* is to provide component-based functionality without compromis
 
 You also pay for a reference to the framework's object that manages the components. Every component must have a reference to this object because function calls are made through this object. This has a runtime cost, of course, and I beg your pardon for stretching the truth when saying *mess* has zero-runtime-cost.
 
-#Example
+# Example
 Here is the minimal example usage of *mess* I can come up with:
 
 ```c++
