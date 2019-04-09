@@ -14,9 +14,9 @@ Other messaging frameworks (ROS, Qt, etc.), typically have a runtime cost:
 * Memory cost: for the function pointers / std::function objects used to store the callbacks, and the allocation cost for dynamic data structures (std::vector).
 * Pointer chasing cost: for calling a function through a function pointer or std::function, for example.
 * Virtual function call cost: for calls through std::function for instance.
-* Message type conversion cost: some frameworks force you to use specific types for messages, incurring a conversion cost from your native processing types to the framework's.
+* Message type conversion cost: for converting from your native processing type to the type your framework forces you to use to exchange data.
 * Polymorphic message type resolution cost: for message types that have polymorphic behavior so they can be transmitted through callback functions with a generic signature.
-* Thread-safety cost: for the dynamic management of the subscriptions as callbacks are being called.
+* Thread-safety cost: for the dynamic management of the subscriptions during execution, as callbacks are being called.
 * Optimization cost: for any level of indirection or polymorphism that prevent the optimizer from inlining and reasonning about the code.
 * Run-time error detection cost: for any level of indirection or polymorphism that prevent type errors to be detected at compile time.
 
