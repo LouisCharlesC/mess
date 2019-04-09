@@ -1,6 +1,6 @@
 Writing software is a mess, embrace it!
 # mess
-*mess* is a zero-runtime-cost header-only C++11 library for component based programming (a.k.a. message passing, event based, reactive, publisher-subscriber, signal-slot, dataflow, etc.).
+*mess* is a zero-runtime-cost header-only C++11 library for component based programming (a.k.a. message passing, event driven, reactive, publisher-subscriber, signal-slot, dataflow, observer pattern, etc.).
 
 *mess* is designed to be as simple as it can be. It lets you define, at compile-time, a **static** data exchange structure within your program. That is, *mess* lets you tag functions from components (e.i. a classes) within your program so that all other components can call them.
 
