@@ -52,9 +52,9 @@ struct Quit;
 // Define topic traits
 namespace mess
 {
-	//											Topic								Topic again, Provider,	Return, Argument
+	//                      Topic               Topic again, Provider,  Return, Argument
 	template<> struct Topic<Interpret>: Service<Interpret, Interpreter, void, const std::string&> {};
-	//											Topic								Topic again
+	//                      Topic               Topic again
 	template<> struct Topic<Quit>: Notification<Quit> {};
 } // mess
 
