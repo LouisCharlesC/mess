@@ -16,10 +16,11 @@ Other messaging frameworks (ROS, Qt, etc.), typically have a runtime cost:
 * Virtual function call cost: for calls through std::function for instance.
 * Message type conversion cost: some frameworks force you to use specific types for messages, incurring a conversion cost from your native processing types to the framework's.
 * Polymorphic message type resolution cost: for message types that have polymorphic behavior so they can be transmitted through callback functions with a generic signature.
+* Thread-safety cost: for the dynamic management of the subscriptions as callbacks are being called.
 * Optimization cost: for any level of indirection or polymorphism that prevent the optimizer from inlining and reasonning about the code.
 * Run-time error detection cost: for any level of indirection or polymorphism that prevent type errors to be detected at compile time.
 
-Sometimes, you even pay the compile-time cost of having to use a separate build system (this is true of both ROS and Qt). Admitedly, ROS and Qt offer *much more* functionality than *mess* does. *mess* only deals with moving data and calling functions within your program.
+Sometimes, you even pay the compile-time cost of having to use a separate build system (this is true of both ROS and Qt). Admitedly, ROS and Qt offer *much more* functionality than *mess* does. *mess* only deals with moving data and calling functions within your program. *mess* is totally *unthread-safe*, it does not even know what a thread is! Having thread-safety within the framework is overkill, thread-safety is the responsability of each component. Only pay for the thread-safety when you need it!
 
 The goal of *mess* is to provide component-based functionality without compromising **performance**, **readability** and **type-safety**. Of course, you need to pay something to get anything. Here is the cost of *mess*:
 * Compilation time cost: there is some amount of meta-programming involved in *mess*, but not that much. Still, this slows down compilation. Also, the framework has to know about every component in the program, and every component has to know about the framework. This induces dependencies between components that would normally not have to be aware of each other. There are ways to limit this dependency to a minimum, and in practice I find it not to be much of a problem.
