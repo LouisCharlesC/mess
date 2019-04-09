@@ -11,6 +11,11 @@
 
 namespace mess
 {
+	/**
+	 * @brief Wraps a class to register it as a component to the broker.
+	 * 
+	 * @tparam ComponentType The class to wrap.
+	 */
 	template<typename ComponentType>
 	class Component: public ComponentType
 	{
