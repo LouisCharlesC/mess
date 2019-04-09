@@ -9,6 +9,6 @@
  * 
  */
 
-#include "mess/brokertemplate.h"
-#include "mess/component.h"
-#include "mess/traits.h"
+#include "brokertemplate.h"
+#include "component.h"
+#include "traits.h"
