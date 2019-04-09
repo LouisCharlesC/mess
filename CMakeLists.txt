@@ -29,8 +29,11 @@ if(GTEST_FOUND)
 	add_executable(tests tests/test_broker.cpp)
 	target_link_libraries(tests)
 
-	add_executable(readme examples/readme.cpp)
+	add_executable(readme examples/minimal/readme.cpp)
 	target_link_libraries(readme)
+
+	add_executable(minimal examples/minimal/main.cpp examples/minimal/console.cpp examples/minimal/interpreter.cpp)
+	target_link_libraries(minimal)
 
 	if (CMAKE_VERSION VERSION_GREATER "3.9")
 		cmake_policy(SET CMP0069 NEW)

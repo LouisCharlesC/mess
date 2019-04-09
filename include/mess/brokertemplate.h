@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "messtraits.h"
+#include "mess/traits.h"
 
 #include <cassert>
 #include <cstddef>

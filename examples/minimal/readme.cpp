@@ -1,7 +1,7 @@
 /**
  * @file readme.cpp
  * @author L.-C. C.
- * @brief 
+ * @brief Minimal mess example in a single implementation file.
  * @version 0.1
  * @date 2019-04-07
  * 
@@ -19,7 +19,7 @@
 class Console;
 class Interpreter;
 
-// Alias for the broker used in this executable 
+// Alias for the broker used in this program
 using Broker = mess::BrokerTemplate<Console, Interpreter>;
 
 // Declare topics
@@ -28,7 +28,9 @@ struct Quit;
 // Define topic traits
 namespace mess
 {
+	//											Topic								Topic again, Provider,	Return, Argument
 	template<> struct Topic<Interpret>: Service<Interpret, Interpreter, void, const std::string&> {};
+	//											Topic								Topic again
 	template<> struct Topic<Quit>: Notification<Quit> {};
 } // mess
 
@@ -69,7 +71,7 @@ public:
 
 	void interpret(const std::string& command)
 	{
-		if (command == "q" || command == "quit")
+		if (command == "q")
 		{
 			m_broker.notify<Quit>();
 			std::cout << "Quit." << std::endl;
@@ -109,7 +111,7 @@ int main(int argc, char **argv)
 	mess::Component<Console> console(broker);
 	mess::Component<Interpreter> interpreter(broker);
 
-	// Enter loop
+	// Loop until user asks to quit
 	console.loop();
 
 	// Rejoice
