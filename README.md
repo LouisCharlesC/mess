@@ -10,7 +10,7 @@ Three calling mechanisms exist in *mess*, allowing push and pull behavior: notif
 * Service topics have a single associated provider. Components can call() the service to execute the service callback function from the provider. Service callbacks can have arguments and a return value.
 
 ## Cost and return
-Other messaging frameworks (ROS, Qt, etc.), typically have a runtime cost:
+Messaging frameworks (ROS, Qt, and all such projects you find on github), have a runtime cost:
 * Memory cost: for the function pointers / std::function objects used to store the callbacks, and the allocation cost for dynamic data structures (std::vector).
 * Pointer chasing cost: for calling a function through a function pointer or std::function, for example.
 * Virtual function call cost: for calls through std::function for instance.
@@ -20,7 +20,7 @@ Other messaging frameworks (ROS, Qt, etc.), typically have a runtime cost:
 * Optimization cost: for any level of indirection or polymorphism that prevent the optimizer from inlining and reasonning about the code.
 * Run-time error detection cost: for any level of indirection or polymorphism that prevent type errors to be detected at compile time.
 
-Sometimes, you even pay the compile-time cost of having to use a separate build system (this is true of both ROS and Qt). Admitedly, ROS and Qt offer *much more* functionality than *mess* does. *mess* only deals with moving data and calling functions within your program. *mess* is totally *unthread-safe*, it does not even know what a thread is! Having thread-safety within the framework is overkill, thread-safety is the responsability of each component. Only pay for the thread-safety when you need it!
+Sometimes, you even pay the compile-time cost of having to use a separate build system (this is true of both ROS and Qt). Admitedly, ROS and Qt offer *much more* functionality than *mess* does. *mess* only deals with moving data and calling functions within your program. *mess* is totally non-thread-safe*, it does not even know what a thread is! Having thread-safety within the framework is overkill, thread-safety is the responsability of each component. Only pay for the thread-safety when you need it!
 
 The goal of *mess* is to provide component-based functionality without compromising **performance**, **readability** and **type-safety**. Of course, you need to pay something to get anything. Here is the cost of *mess*:
 * Compilation time cost: there is some amount of meta-programming involved in *mess*, but not that much. Still, this slows down compilation. Also, the framework has to know about every component in the program, and every component has to know about the framework. This induces dependencies between components that would normally not have to be aware of each other. There are ways to limit this dependency to a minimum, and in practice I find it not to be much of a problem.
@@ -31,7 +31,7 @@ You also pay for a reference to the framework's object that manages the componen
 For this measly cost, you get the awesome return of avoiding the cost of the other component based frameworks out there!
 
 ## Example
-Here is the minimal example usage of *mess* I can come up with. Please check the examples folder to see how to arrange this minimal example into several header and implementation files in order to reduce compilation dependencies.
+Here is the minimal example of *mess* I can come up with. Please check the examples folder to see how to arrange this minimal example into several header and implementation files in order to reduce compilation dependencies.
 
 ```c++
 #include "mess/mess.h"
