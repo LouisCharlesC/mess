@@ -20,7 +20,7 @@ michelangelo.eatPizza();
 raphael.eatPizza();
 donatello.eatPizza();
 ```
-except that the former is concise and expressive, and if there are several places in your code where eating pizza is appropriate and at some point in the future Michelangelo is not interested in pizza anymore (you thought it was 100% impossible that it happenned, but it happenned!), you only need to remove the lines of code that subscribe Michelangelo to the topic rather than track down every occurence of michelangelo.eatPizza().
+except that the former is concise and expressive, and if there are several places in your code where eating pizza is appropriate and at some point in the future Splinter becomes interested in pizza (you thought it was 100% impossible, but it happenned!), you only need to add a few lines of code to subscribe Splinter to the topic rather than track down every place you should add splinter.eatPizza(); (and pass a reference to splinter all the way down to where these calls happen).
 
 ## Cost and return
 Messaging frameworks (ROS, Qt, and all such projects you find on github), have a runtime cost:
