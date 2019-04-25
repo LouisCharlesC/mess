@@ -1,3 +1,5 @@
+Work in progress! Please come back in a few weeks!
+
 Writing software is a mess, embrace it!
 # mess
 *mess* is a zero-runtime-cost header-only C++11 library for component based programming (a.k.a. message passing, event driven, reactive, publisher-subscriber, signal-slot, dataflow, observer pattern, etc.).
