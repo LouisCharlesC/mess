@@ -1,9 +1,8 @@
+# Readme in progress!
+
 Writing software is a mess, embrace it!
 # mess
 *mess* is a zero-runtime-cost header-only C++11 library for component based programming (a.k.a. message passing, event driven, reactive, publisher-subscriber, signal-slot, dataflow, observer pattern, etc.).
-
-## Briefly
-Two calling mechanisms exist in *mess*: publications and services. When you create a topic in *mess*, you can define it to be a publication or a service topic. Publications can have multiple subscribers, whereas services have a single provider. Publications do not have a return value, services can have one.
 
 ## Cost and return
 Other messaging frameworks (ROS, Qt, etc.), typically have a runtime cost:
@@ -17,7 +16,7 @@ Other messaging frameworks (ROS, Qt, etc.), typically have a runtime cost:
 * Optimization cost: for any level of indirection or polymorphism that prevent the optimizer from inlining and reasonning about the code.
 * Run-time error detection cost: for any level of indirection or polymorphism that prevent type errors to be detected at compile time.
 
-Sometimes, you even pay the compile-time cost of having to use a separate build system (e.g. ROS, Qt). Admitedly, ROS and Qt offer *much more* functionality than *mess* does. *mess* only deals with moving data and calling functions within your program. *mess* is totally *unthread-safe*, it does not even know what a thread is! Having thread-safety within the framework is overkill, thread-safety is the responsability of each component. Only pay for the thread-safety when you need it!
+Sometimes, you even pay the compile-time cost of having to use a separate build system (e.g. ROS, Qt). Admitedly, ROS and Qt offer *much more* functionality than *mess* does. *mess* only deals with moving data and calling functions within your program. *mess* is totally *unthread-safe*, it does not even know what a thread is! I argue that having thread-safety within the framework is overkill, thread-safety is the responsability of each component. Only pay for the thread-safety when you need it!
 
 The goal of *mess* is to provide component-based functionality without compromising **performance**, **readability** and **type-safety**. Of course, you need to pay something to get anything. Here is the cost of *mess*:
 * Compilation time cost: there is some amount of meta-programming involved in *mess*, but not that much. Still, this slows down compilation. Also, the framework has to know about every component in the program, and every component has to know about the framework. This induces dependencies between components that would normally not have to be aware of each other. There are ways to limit this dependency to a minimum, and in practice I find it not to be much of a problem.
@@ -28,7 +27,8 @@ For this measly cost, you get the awesome return of avoiding the cost of the oth
 ## Example
 Here is *mess*'s "Hello, world!":
 
-```c++#include "mess/mess.h"
+```c++
+#include "mess/mess.h"
 
 #include <iostream>
 
