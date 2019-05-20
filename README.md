@@ -5,11 +5,11 @@ Writing software is a mess, embrace it!
 *mess* is a zero-runtime-cost header-only C++11 library for component based programming (a.k.a. message passing, event driven, reactive, publisher-subscriber, signal-slot, dataflow, observer pattern, etc.).
 
 ## Briefly
-In *mess*, there exist components, and there exists a Broker. Through the Broker, any component can *notify* a topic, *publish* to a topic and *call* a service to interact with other components. Components need not be aware of each other, they only need to be aware of topics.
+In *mess*, there exist components, topics, and a Broker. Through the Broker, any component can *publish* to a topic and *call* a service to interact with other components. Components need not be aware of each other, they only need to be aware of topics and the Broker.
 
-Creating notification, publication and service topics and subscribing to them *is done at compile-time*. There is absolutely no run-time operation involved. Zero, runtime, cost. To put it differently, imagine the topic "PizzaReady" and the components "Leonardo", "Michelangelo", "Raphael", and "Donatello" exist. After the components have subscribed to the topic and registered their ```eat()``` member function callback, writing:
+Creating publication and service topics and subscribing to them *is done at compile-time*. There is absolutely no run-time operation involved. Zero, runtime, cost. To put it differently, imagine the topic "PizzaReady" and the components "Leonardo", "Michelangelo", "Raphael", and "Donatello" exist. After the components have subscribed to the topic and registered their ```eatPizza()``` member function callback, writing:
 ```c++
-broker.notify<PizzaReady>();
+broker.publish<PizzaReady>();
 ```
 is **exactly** the same as writing:
 ```c++
@@ -18,7 +18,7 @@ michelangelo.eatPizza();
 raphael.eatPizza();
 donatello.eatPizza();
 ```
-except that the former is concise and expressive, and if there are several places in your code where eating pizza is appropriate and at some point in the future Splinter becomes interested in pizza (you thought it was 100% impossible, but it happenned!), you only need to add a few lines of code to subscribe Splinter to the topic rather than track down every place you should add splinter.eatPizza(); (and pass a reference to splinter all the way down to where these calls happen).
+except that the former is concise and expressive, and if there are several places in your code where eating pizza is appropriate and at some point in the future Splinter becomes interested in pizza (you thought it was 100% impossible, but it happenned!), you only need to add a few lines of code to subscribe Splinter to the topic rather than track down every place you should add splinter.eatPizza();. Basic component-based programming stuff!
 
 ## Cost and return
 Messaging frameworks (ROS, Qt, and all such projects you find on github), have a runtime cost:
