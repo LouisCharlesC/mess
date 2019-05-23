@@ -16,9 +16,10 @@
 #include <tuple>
 #include <type_traits>
 
-// TODO: make publish secure: prevent moving
+// TODO: test for publish and call with different subscribers and providers patterns
 			// add nested struct in components to facilitate explicit instantiation
 			// show how to split into files and use expl inst to limit compilation time
+			// allow returns for publications ?
 
 namespace mess
 {
@@ -36,6 +37,7 @@ namespace mess
 		template<typename TopicType, typename BrokerType, typename... Args>
 		static void publish(BrokerType& broker, Args&&... args)
 		{
+			// Sorry for this line of code, it just calls the onPublish member function from all subcribing components, forwarding args on each call
 			(void)std::initializer_list<int>{((void)ComponentTypes::onPublish(TopicType(), broker, std::get<BrokerType::template ComponentIndex<ComponentTypes>::value>(broker.m_cores), std::forward<Args>(args)...),0)...};
 		}
 	};
@@ -123,7 +125,7 @@ namespace mess
 		template<typename TopicType, typename... Args>
 		void publish(Args&&... args)
 		{
-			Topic<TopicType>::template publish<TopicType>(*this, std::forward<Args>(args)...);
+			Topic<TopicType>::template publish<TopicType>(*this, std::forward<const Args>(args)...);
 		}
 		
 		/**
@@ -141,7 +143,7 @@ namespace mess
 		}
 
 	private:
-		/// Pointers to the cores
-		CoreRefs m_cores;
+		/// Refrences to the cores
+		const CoreRefs m_cores;
 	};
 }
