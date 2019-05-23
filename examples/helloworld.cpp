@@ -23,7 +23,7 @@ public:
 	using Core = std::ostream;
 
 	template<typename Broker>
-	static void onPublish(LogInfo, Broker& broker, Core& stream, const char[] info)
+	static void onPublish(LogInfo, Broker& broker, Core& stream, const char info[])
 	{
 		stream << info;
 	}

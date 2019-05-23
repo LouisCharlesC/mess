@@ -12,9 +12,9 @@
 #pragma once
 
 #include <cstddef>
+#include <initializer_list>
 #include <iterator>
 #include <tuple>
-#include <type_traits>
 
 // TODO: test for publish and call with different subscribers and providers patterns
 			// add nested struct in components to facilitate explicit instantiation
