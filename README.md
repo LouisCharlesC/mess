@@ -2,74 +2,58 @@
 
 Writing software is a mess, embrace it!
 # mess
-*mess* is a zero-runtime-cost header-only C++11 library for component based programming (a.k.a. message passing, event driven, reactive, publisher-subscriber, signal-slot, dataflow, observer pattern, etc.).
-
-## Briefly
-In *mess*, there exist components, topics, and a Broker. Through the Broker, any component can *publish* to a topic and *call* a service to interact with other components. Components need not be aware of each other, they only need to be aware of topics and the Broker.
-
-Creating publication and service topics and subscribing to them *is done at compile-time*. There is absolutely no run-time operation involved. Zero, runtime, cost. To put it differently, imagine the topic "PizzaReady" and the components "Leonardo", "Michelangelo", "Raphael", and "Donatello" exist. After the components have subscribed to the topic and registered their ```eatPizza()``` member function callback, writing:
-```c++
-broker.publish<PizzaReady>();
-```
-is **exactly** the same as writing:
-```c++
-leonardo.eatPizza();
-michelangelo.eatPizza();
-raphael.eatPizza();
-donatello.eatPizza();
-```
-except that the former is concise and expressive, and if there are several places in your code where eating pizza is appropriate and at some point in the future Splinter becomes interested in pizza (you thought it was 100% impossible, but it happenned!), you only need to add a few lines of code to subscribe Splinter to the topic rather than track down every place you should add splinter.eatPizza();. Basic component-based programming stuff!
-
-## Cost and return
-Messaging frameworks (ROS, Qt, and all such projects you find on github), have a runtime cost:
-* Memory cost: for the callable objects (function pointer, std::function, etc.) used to store the subscription callbacks.
-* Allocation cost: for the std::vector used to store the variable number of these callbacks.
-* Pointer chasing cost: for calling a function through a function pointer or std::function, for example.
-* Virtual function call cost: for calls through std::function and subscribe-by-inheritance frameworks.
-* Message type conversion cost: to convert your business domain type into the type your framework forces you to use to exchange data.
-* Polymorphic message type resolution cost: for message types that have polymorphic behavior so they can be transmitted through callback functions with a generic signature.
-* Thread-safety cost: to manage the dynamic messaging structure during execution.
-* Optimization cost: for any level of indirection or polymorphism that prevent the optimizer from inlining and reasonning about the code.
-* Run-time error detection cost: for any level of indirection or polymorphism that prevent type errors to be detected at compile time.
-
-Sometimes, messaging frameworks even have the compile-time cost of a separate build system (this is true of both ROS and Qt). Admitedly, ROS and Qt offer *much more* functionality than *mess* does. *mess* only deals with moving data and calling functions within your program. *mess* is *non-thread-safe*, it does not even know what a thread is! If you need thread-safety, take care of it within the components that need it. If your code is single-threaded, make it multi-threaded (it will run faster!) and take care of thread-safety within thoses components that need it. *mess* is a good platform for multi-threaded programs.
-
-The goal of *mess* is to provide component-based functionality, and only this, without compromising **performance**, **readability** and **type-safety**. Of course, you need to pay something to get anything. Here is the cost of *mess*:
-* Compilation time cost: there is some amount of meta-programming involved in *mess*, but not that much. Still, this slows down compilation. Also, the framework has to know about every component in the program, and every component has to know about the framework. This induces dependencies between components that would normally not have to be aware of each other. There are ways to limit this dependency to a minimum, and in practice I find it not to be much of a problem.
-* Static structure cost: with *mess*, you cannot add or remove subscribers or callbacks on-the-fly. *mess* only lets you define the **static** structure of you program. I find this to be totally acceptable: a program always has a basic static structure. Some programs have a dynamic structure *on top of the static structure*. *mess* takes case of the static part and *let's you build the dynamic part* if you need it, anyway you like. That way, you only pay the cost of a dynamic framework for those parts of your program that benefit from the added flexibiity.
-
-For this measly cost, you get the awesome return of avoiding the cost of the other component based frameworks out there!
-
+Just the example code for now, more will come.
 ## Example
-Here is *mess*'s "Hello, world!":
+Here is *mess*'s "Hello, world!". You should know that with optimizations enabled, this code compiles to the exact same executable as a plain C++ "Hello, world!" (shown below). This is verified in my tests. Also, have a look at the examples/hellofile.cpp for an example with multiple subscribers.
 
 ```c++
 #include "mess/mess.h"
 
 #include <iostream>
 
-struct LogInfo {};
+// Define a topic
+struct LogTopic {};
 
-class Logger
+// Define a component: the role of a component is to bridge between topics and cores.
+class LoggerComponent
 {
 public:
+	// Declare the core: the class that will work on the received messages
 	using Core = std::ostream;
 
+	// Define a subscription callback for topic LogTopic
 	template<typename Broker>
-	static void onPublish(LogInfo, Broker& broker, std::ostream& stream, const char info[])
+	static void onPublish(LogTopic, Broker& broker, Core& stream, const char info[])
 	{
-		stream << info;
+		stream << info; // pass the received data to the core
+		// you can use the broker to publish the result of your computations if needed
 	}
 };
 
 namespace mess
 {
-	template<> struct Topic<LogInfo>: Subscribe<Logger> {};
+	// Declare subscribers for the topic
+	template<> struct Topic<LogTopic>: Subscribers<LoggerComponent> {};
 }
 
 int main(int argc, char **argv)
 {
-	mess::Broker<Logger> broker(std::cout);
-	broker.publish<LogInfo>("Hello, world!\n");
+	// Using the builder for such a simple example is overkill, I just wanted to show how to use it
+	mess::Broker<LoggerComponent>::Builder builder;
+	builder.set<LoggerComponent>(std::cout); // set a reference to the component's core
+	
+	const auto broker = builder.build(); // get the broker from the builder
+
+	// Publish some data to the topic through the broker
+	broker.publish<LogTopic>("Hello, world!\n");
+}
+```
+Here is the plain "Hello, world!" the above example compiles equal to:
+```c++
+#include <iostream>
+
+int main(int argc, char **argv)
+{
+	std::cout << "Hello, world!\n";
 }
 ```

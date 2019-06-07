@@ -97,7 +97,6 @@ struct TestComponent2: TestComponent1
 	}
 };
 
-#ifdef NDEBUG
 TEST(HelloWorldTest, WithOrWithoutMess) {
 	std::filebuf fb;
 	fb.open("../helloworld", std::ios::in|std::ios::binary);
@@ -113,7 +112,6 @@ TEST(HelloWorldTest, WithOrWithoutMess) {
 	EXPECT_EQ(sizeWithMess, sizeWithoutMess);
 	EXPECT_TRUE(std::equal(withMess.cbegin(), withMess.cend(), withoutMess.cbegin()));
 }
-#endif
 
 struct MessTest : public testing::Test
 {
