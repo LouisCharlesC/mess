@@ -38,11 +38,8 @@ namespace mess
 
 int main(int argc, char **argv)
 {
-	// Using the builder for such a simple example is overkill, I just wanted to show how to use it
-	mess::Broker<LoggerComponent>::Builder builder;
-	builder.set<LoggerComponent>(std::cout); // set a reference to the component's core
-	
-	const auto broker = builder.build(); // get the broker from the builder
+	// Instantiate the broker
+	mess::Broker<LoggerComponent> broker(std::cout);
 
 	// Publish some data to the topic through the broker
 	broker.publish<LogTopic>("Hello, world!\n");

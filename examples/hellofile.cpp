@@ -36,7 +36,15 @@ namespace mess
 
 int main(int argc, char **argv)
 {
-	std::ofstream ofs("loginfo.txt");
-	mess::Broker<ConsoleLogger, FileLogger> broker(std::cout, ofs);
+	// Instantiate FileLogger's core
+	std::ofstream ofs("log.txt");
+
+	// Using the builder for such a simple example is overkill, I just wanted to show how to use it
+	mess::Broker<ConsoleLogger, FileLogger>::Builder builder;
+	builder.set<ConsoleLogger>(std::cout); // set the reference to ConsoleLogger's core
+	builder.set<FileLogger>(ofs); // set a reference to FileLogger's core
+	
+	const auto broker = builder.build(); // get the broker from the builder
+
 	broker.publish<LogTopic>("Hello, world!\n");
 }
