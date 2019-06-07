@@ -13,30 +13,37 @@
 
 #include <iostream>
 
-// Define topic
-struct LogInfo {};
+// Define a topic
+struct LogTopic {};
 
-// Define component
-class Logger
+// Define a component: components receive messages when they are published are pass them to their core
+class LoggerComponent
 {
 public:
+	// Define the core: the class that will work on the received messages
 	using Core = std::ostream;
 
+	// Define a subscription callback for topic LogTopic
 	template<typename Broker>
-	static void onPublish(LogInfo, Broker& broker, Core& stream, const char info[])
+	static void onPublish(LogTopic, Broker& broker, Core& stream, const char info[])
 	{
 		stream << info;
 	}
 };
 
-// Subscribe to topic
 namespace mess
 {
-	template<> struct Topic<LogInfo>: Subscribe<Logger> {};
+	// Subscribe to topic
+	template<> struct Topic<LogTopic>: Subscribers<LoggerComponent> {};
 }
 
 int main(int argc, char **argv)
 {
-	mess::Broker<Logger> broker(std::cout);
-	broker.publish<LogInfo>("Hello, world!\n");
+	// Using the builder for such a simple example is overkill, I just wanted to show how to use it
+	mess::Broker<LoggerComponent>::Builder builder;
+	builder.set<LoggerComponent>(std::cout);
+	// Instantiate broker: provide core implementations
+	const auto broker = builder.build();
+	// Publish some data to the topic
+	broker.publish<LogTopic>("Hello, world!\n");
 }

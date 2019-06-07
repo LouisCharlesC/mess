@@ -14,29 +14,29 @@
 #include <fstream>
 #include <iostream>
 
-struct LogInfo {};
+struct LogTopic {};
 
-struct Logger
+struct LoggerComponent
 {
 	using Core = std::ostream;
 
 	template<typename Broker>
-	static void onPublish(LogInfo, Broker& broker, std::ostream& os, const char* info)
+	static void onPublish(LogTopic, Broker& broker, Core& stream, const char* info)
 	{
-		os << info;
+		stream << info;
 	}
 };
-struct ConsoleLogger: Logger {};
-struct FileLogger: Logger {};
+struct ConsoleLogger: LoggerComponent {};
+struct FileLogger: LoggerComponent {};
 
 namespace mess
 {
-	template<> struct Topic<LogInfo>: Subscribe<ConsoleLogger, FileLogger> {};
+	template<> struct Topic<LogTopic>: Subscribers<ConsoleLogger, FileLogger> {};
 }
 
 int main(int argc, char **argv)
 {
 	std::ofstream ofs("loginfo.txt");
 	mess::Broker<ConsoleLogger, FileLogger> broker(std::cout, ofs);
-	broker.publish<LogInfo>("Hello, world!\n");
+	broker.publish<LogTopic>("Hello, world!\n");
 }
