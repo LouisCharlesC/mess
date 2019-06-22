@@ -13,7 +13,7 @@
 
 #include <iostream>
 
-// Define a channe;
+// Define a channel;
 struct Log {};
 
 // Define an endpoint: an endpoint is where mess and your domain-specific code meet
