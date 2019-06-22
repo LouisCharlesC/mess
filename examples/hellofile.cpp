@@ -14,24 +14,24 @@
 #include <fstream>
 #include <iostream>
 
-struct LogTopic {};
+struct Log {};
 
-struct LoggerComponent
+struct Logger
 {
-	using Core = std::ostream;
+	using Component = std::ostream;
 
 	template<typename Broker>
-	static void onPublish(LogTopic, Broker& broker, Core& stream, const char* info)
+	static void onPublish(Log, Broker& broker, Component& logger, const char msg[])
 	{
-		stream << info;
+		logger << msg;
 	}
 };
-struct ConsoleLogger: LoggerComponent {};
-struct FileLogger: LoggerComponent {};
+struct ConsoleLogger: Logger {};
+struct FileLogger: Logger {};
 
 namespace mess
 {
-	template<> struct Topic<LogTopic>: Subscribers<ConsoleLogger, FileLogger> {};
+	template<> struct Channel<Log>: Subscribers<ConsoleLogger, FileLogger> {};
 }
 
 int main(int argc, char **argv)
@@ -41,10 +41,10 @@ int main(int argc, char **argv)
 
 	// Using the builder for such a simple example is overkill, I just wanted to show how to use it
 	mess::Broker<ConsoleLogger, FileLogger>::Builder builder;
-	builder.set<ConsoleLogger>(std::cout); // set the reference to ConsoleLogger's core
-	builder.set<FileLogger>(ofs); // set a reference to FileLogger's core
+	builder.set<ConsoleLogger>(std::cout); // set ConsoleLogger's component
+	builder.set<FileLogger>(ofs); // set FileLogger's component
 	
-	const auto broker = builder.build(); // get the broker from the builder
-
-	broker.publish<LogTopic>("Hello, world!\n");
+	auto broker = builder.build(); // get the broker from the builder
+	// Publish to the Log topic through the broker
+	broker.publish<Log>("Hello, world!\n");
 }

@@ -12,11 +12,9 @@
 #include "mess/mess.h"
 
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
 
 #include <algorithm>
 #include <fstream>
-#include <tuple>
 #include <vector>
 
 struct TestMessage
@@ -37,64 +35,63 @@ struct TestMessage
 int TestMessage::copyConstructed;
 int TestMessage::moveConstructed;
 
-struct TestTopicByValue {};
-struct TestTopicByRef {};
-struct TestServiceByValue {};
-struct TestServiceByRef {};
-struct TestSingleProviderService {};
+struct TestChannelByValue {};
+struct TestChannelByRef {};
+// struct TestServiceByValue {};
+// struct TestServiceByRef {};
+// struct TestSingleProviderService {};
 
-struct TestComponent1;
-struct TestComponent2;
+struct TestEndpoint1;
+struct TestEndpoint2;
 
-template<> struct mess::Topic<TestTopicByRef>: mess::Subscribers<TestComponent1, TestComponent2> {};
-template<> struct mess::Topic<TestTopicByValue>: mess::Subscribers<TestComponent1, TestComponent2> {};
-template<> struct mess::Topic<TestServiceByRef>: mess::Return<int>, mess::Providers<TestComponent1, TestComponent2> {};
-template<> struct mess::Topic<TestServiceByValue>: mess::Return<float>, mess::Providers<TestComponent1, TestComponent2> {};
-template<> struct mess::Topic<TestSingleProviderService>: mess::Return<char>, mess::Providers<TestComponent2> {};
+template<> struct mess::Channel<TestChannelByRef>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
+template<> struct mess::Channel<TestChannelByValue>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
+// template<> struct mess::Channel<TestServiceByRef>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
+// template<> struct mess::Channel<TestServiceByValue>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
+// template<> struct mess::Channel<TestSingleProviderService>: mess::Subscribers<TestEndpoint2> {};
 
-constexpr mess::Topic<TestServiceByRef>::ReturnType testComponent1TestServiceByRefReturn = 42;
-constexpr mess::Topic<TestServiceByValue>::ReturnType testComponent1TestServiceByValueReturn = 43.f;
-constexpr mess::Topic<TestServiceByRef>::ReturnType testComponent2TestServiceByRefReturn = 44;
-constexpr mess::Topic<TestServiceByValue>::ReturnType testComponent2TestServiceByValueReturn = 45.f;
-constexpr mess::Topic<TestSingleProviderService>::ReturnType testComponent2TestSingleProviderServiceReturn = 46;
+// constexpr mess::Channel<TestServiceByRef>::ReturnType testEndpoint1TestServiceByRefReturn = 42;
+// constexpr mess::Channel<TestServiceByValue>::ReturnType testEndpoint1TestServiceByValueReturn = 43.f;
+// constexpr mess::Channel<TestServiceByRef>::ReturnType testEndpoint2TestServiceByRefReturn = 44;
+// constexpr mess::Channel<TestServiceByValue>::ReturnType testEndpoint2TestServiceByValueReturn = 45.f;
+// constexpr mess::Channel<TestSingleProviderService>::ReturnType testEndpoint2TestSingleProviderServiceReturn = 46;
 
-struct TestComponent1
+struct TestEndpoint1
 {
-	using Core = TestComponent1;
+	using Component = TestEndpoint1;
 
 	template<typename Broker>
-	static void onPublish(TestTopicByRef, const Broker& broker, Core& core, const TestMessage& message) {}
+	static void onPublish(TestChannelByRef, const Broker& broker, Component& core, const TestMessage& message) {}
 	template<typename Broker>
-	static void onPublish(TestTopicByValue, const Broker& broker, Core& core, TestMessage message) {}
-	template<typename Broker>
-	static mess::Topic<TestServiceByRef>::ReturnType onCall(TestServiceByRef, const Broker& broker, Core& core, const TestMessage& message)
-	{
-		return testComponent1TestServiceByRefReturn;
-	}
-	template<typename Broker>
-	static mess::Topic<TestServiceByValue>::ReturnType onCall(TestServiceByValue, const Broker& broker, Core& core, TestMessage message)
-	{
-		return testComponent1TestServiceByValueReturn;
-	}
-
+	static void onPublish(TestChannelByValue, const Broker& broker, Component& core, TestMessage message) {}
+	// template<typename Broker>
+	// static mess::Channel<TestServiceByRef>::ReturnType onCall(TestServiceByRef, const Broker& broker, Component& core, const TestMessage& message)
+	// {
+	// 	return testEndpoint1TestServiceByRefReturn;
+	// }
+	// template<typename Broker>
+	// static mess::Channel<TestServiceByValue>::ReturnType onCall(TestServiceByValue, const Broker& broker, Component& core, TestMessage message)
+	// {
+	// 	return testEndpoint1TestServiceByValueReturn;
+	// }
 };
-struct TestComponent2: TestComponent1
+struct TestEndpoint2: TestEndpoint1
 {
-	template<typename Broker>
-	static mess::Topic<TestServiceByRef>::ReturnType onCall(TestServiceByRef, const Broker& broker, Core& core, const TestMessage& message)
-	{
-		return testComponent2TestServiceByRefReturn;
-	}
-	template<typename Broker>
-	static mess::Topic<TestServiceByValue>::ReturnType onCall(TestServiceByValue, const Broker& broker, Core& core, TestMessage message)
-	{
-		return testComponent2TestServiceByValueReturn;
-	}
-	template<typename Broker>
-	static mess::Topic<TestSingleProviderService>::ReturnType onCall(TestSingleProviderService, const Broker& broker, Core& core, const TestMessage& message)
-	{
-		return testComponent2TestSingleProviderServiceReturn;
-	}
+// 	// template<typename Broker>
+// 	// static mess::Channel<TestServiceByRef>::ReturnType onCall(TestServiceByRef, const Broker& broker, Component& core, const TestMessage& message)
+// 	// {
+// 	// 	return testEndpoint2TestServiceByRefReturn;
+// 	// }
+// 	// template<typename Broker>
+// 	// static mess::Channel<TestServiceByValue>::ReturnType onCall(TestServiceByValue, const Broker& broker, Component& core, TestMessage message)
+// 	// {
+// 	// 	return testEndpoint2TestServiceByValueReturn;
+// 	// }
+// 	// template<typename Broker>
+// 	// static mess::Channel<TestSingleProviderService>::ReturnType onCall(TestSingleProviderService, const Broker& broker, Component& core, const TestMessage& message)
+// 	// {
+// 	// 	return testEndpoint2TestSingleProviderServiceReturn;
+// 	// }
 };
 
 TEST(HelloWorldTest, WithOrWithoutMess) {
@@ -113,6 +110,22 @@ TEST(HelloWorldTest, WithOrWithoutMess) {
 	EXPECT_TRUE(std::equal(withMess.cbegin(), withMess.cend(), withoutMess.cbegin()));
 }
 
+TEST(HelloWorldTest, WithOrWithoutUnknown) {
+	std::filebuf fb;
+	fb.open("../helloworld", std::ios::in|std::ios::binary);
+	const auto sizeWithoutUnknowns = fb.in_avail();
+	std::vector<char> withoutUnknowns(sizeWithoutUnknowns);
+	fb.sgetn(withoutUnknowns.data(), sizeWithoutUnknowns);
+	fb.close();
+	fb.open("../helloworldunknown", std::ios::in|std::ios::binary);
+	const auto sizeWithUnknowns = fb.in_avail();
+	std::vector<char> withUnknowns(sizeWithUnknowns);
+	fb.sgetn(withUnknowns.data(), sizeWithUnknowns);
+
+	EXPECT_EQ(sizeWithoutUnknowns, sizeWithUnknowns);
+	EXPECT_TRUE(std::equal(withoutUnknowns.cbegin(), withoutUnknowns.cend(), withUnknowns.cbegin()));
+}
+
 struct MessTest : public testing::Test
 {
 	MessTest()
@@ -126,57 +139,57 @@ struct MessTest : public testing::Test
 		TestMessage::moveConstructed = 0;
 	}
 
-	TestComponent1 component1;
-	TestComponent2 component2;
+	TestEndpoint1 component1;
+	TestEndpoint2 component2;
 
-	const mess::Broker<TestComponent1, TestComponent2> broker{component1, component2};
+	mess::Broker<TestEndpoint1, TestEndpoint2> broker{component1, component2};
 	
 	TestMessage message;
 };
 
 TEST_F(MessTest, ConstRefPublishSubByRef) {
-	broker.publish<TestTopicByRef>(const_cast<const TestMessage&>(message));
+	broker.publish<TestChannelByRef>(const_cast<const TestMessage&>(message));
 	EXPECT_EQ(TestMessage::copyConstructed, 0);
 	EXPECT_EQ(TestMessage::moveConstructed, 0);
 }
 TEST_F(MessTest, RefPublishSubByRef) {
-	broker.publish<TestTopicByRef>(message);
+	broker.publish<TestChannelByRef>(message);
 	EXPECT_EQ(TestMessage::copyConstructed, 0);
 	EXPECT_EQ(TestMessage::moveConstructed, 0);
 }
 TEST_F(MessTest, MovePublishSubByRef) {
-	broker.publish<TestTopicByRef>(std::move(message));
+	broker.publish<TestChannelByRef>(std::move(message));
 	EXPECT_EQ(TestMessage::copyConstructed, 0);
 	EXPECT_EQ(TestMessage::moveConstructed, 0);
 }
 TEST_F(MessTest, ConstRefPublishSubByValue) {
-	broker.publish<TestTopicByValue>(const_cast<const TestMessage&>(message));
+	broker.publish<TestChannelByValue>(const_cast<const TestMessage&>(message));
 	EXPECT_EQ(TestMessage::copyConstructed, 2);
 	EXPECT_EQ(TestMessage::moveConstructed, 0);
 }
 TEST_F(MessTest, RefPublishSubByValue) {
-	broker.publish<TestTopicByValue>(message);
+	broker.publish<TestChannelByValue>(message);
 	EXPECT_EQ(TestMessage::copyConstructed, 2);
 	EXPECT_EQ(TestMessage::moveConstructed, 0);
 }
 TEST_F(MessTest, MovePublishSubByValue) {
-	broker.publish<TestTopicByValue>(std::move(message));
+	broker.publish<TestChannelByValue>(std::move(message));
 	EXPECT_EQ(TestMessage::copyConstructed, 1);
 	EXPECT_EQ(TestMessage::moveConstructed, 1);
 }
 
-TEST_F(MessTest, ConstRefCallProvideByRef) {
-	auto response = broker.call<TestServiceByRef>(const_cast<const TestMessage&>(message));
-	EXPECT_EQ(TestMessage::copyConstructed, 0);
-	EXPECT_EQ(TestMessage::moveConstructed, 0);
+// // TEST_F(MessTest, ConstRefCallProvideByRef) {
+// // 	auto response = broker.call<TestServiceByRef>(const_cast<const TestMessage&>(message));
+// // 	EXPECT_EQ(TestMessage::copyConstructed, 0);
+// // 	EXPECT_EQ(TestMessage::moveConstructed, 0);
 
-	EXPECT_EQ(std::get<0>(response), testComponent2TestServiceByRefReturn);
-	EXPECT_EQ(std::get<1>(response), testComponent1TestServiceByRefReturn);
-}
-TEST_F(MessTest, SingleProviderService) {
-	auto response = broker.call<TestSingleProviderService>(const_cast<const TestMessage&>(message));
-	EXPECT_EQ(TestMessage::copyConstructed, 0);
-	EXPECT_EQ(TestMessage::moveConstructed, 0);
+// // 	EXPECT_EQ(std::get<0>(response), testEndpoint2TestServiceByRefReturn);
+// // 	EXPECT_EQ(std::get<1>(response), testEndpoint1TestServiceByRefReturn);
+// // }
+// // TEST_F(MessTest, SingleProviderService) {
+// // 	auto response = broker.call<TestSingleProviderService>(const_cast<const TestMessage&>(message));
+// // 	EXPECT_EQ(TestMessage::copyConstructed, 0);
+// // 	EXPECT_EQ(TestMessage::moveConstructed, 0);
 
-	EXPECT_EQ(response, testComponent2TestSingleProviderServiceReturn);
-}
+// // 	EXPECT_EQ(response, testEndpoint2TestSingleProviderServiceReturn);
+// // }
