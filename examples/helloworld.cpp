@@ -13,36 +13,39 @@
 
 #include <iostream>
 
-// Define a channel;
+// Create a channel, a channel is just a type
 struct Log {};
 
-// Define an endpoint: an endpoint is where mess and your domain-specific code meet
+// This is an Endpoint, a class you have to write to interface mess and a business domain class
 class Logger
 {
 public:
-	// Declare the component for this endpoint, your domain-specific class that actually does the work
+	// The component is your business domain class (for "Hello, wordl!", an std::ostream suffices)
 	using Component = std::ostream;
 
-	// Define a subscription callback for the channel.
-	// The 3 first arguments are imposed by mess, you can add anything you like after that
+	// This is a callback for the Log channel, the signature is partly imposed by mess
 	template<typename Broker>
 	static void onPublish(Log, Broker& broker, Component& logger, const char msg[])
 	{
-		logger << msg; // pass the message to your code
+		// Here, mess and your code meet!
+		// Typically you 1) pass the data to the component
+		logger << msg;
+		// and 2) use the broker to publish any result you want to propagate.
+		// broker.publish<AChannel>(someData);
 	}
 };
 
 namespace mess
 {
-	// Define subscribers for the channel (there could be more than one subscriber)
+	// This is how you tell mess which endpoints subscribe to a channel.
 	template<> struct Channel<Log>: Subscribers<Logger> {};
 }
 
 int main(int argc, char **argv)
 {
-	// Instantiate the broker, pass std::cout as the Logger's component
+	// Instantiate the broker. Remember the component ? When you instantiate the broker, you have to provide it with an instance of each component in your program (std::cout is an instance of std::ostream).
 	mess::Broker<Logger> broker(std::cout);
 
-	// Publish to the Log topic through the broker
+	// Publish to the Log channel through the broker
 	broker.publish<Log>("Hello, world!\n");
 }
