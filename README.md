@@ -24,7 +24,7 @@ struct Log {};
 class Logger
 {
 public:
-	// The component is your business domain class (for "Hello, wordl!", an std::ostream suffices)
+	// The component is your business domain class (for "Hello, world!", an std::ostream suffices)
 	using Component = std::ostream;
 
 	// This is a callback for the Log channel, the signature is partly imposed by mess
