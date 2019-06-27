@@ -1,5 +1,8 @@
 # Readme in progress!
 Writing software is a mess, embrace it!
+
+[![Build Status](https://travis-ci.org/LouisCharlesC/safe.svg?branch=master)](https://travis-ci.org/LouisCharlesC/safe)
+
 # mess
 *mess* is a zero-runtime-cost header-only C++11 library for publish-subscribe message passing. This is a basic building block for component based programming (a.k.a. message passing, event driven, reactive, publisher-subscriber, signal-slot, dataflow, observer pattern, etc.).
 
