@@ -54,7 +54,7 @@ install:
   - if [[ "${CXX}" == clang* ]]; then export CXXFLAGS="-stdlib=libc++"; fi
   - git clone --depth=1 https://github.com/google/googletest
   - mkdir -p googletest/build && cd googletest/build
-  - cmake ..
+  - cmake -D CMAKE_BUILD_TYPE=Release ..
   - sudo make -j4 install
   - cd ../..
 
