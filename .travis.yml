@@ -60,6 +60,6 @@ install:
 
 script:
   - mkdir -p build && cd build
-  - cmake ..
+  - cmake -D CMAKE_BUILD_TYPE=Release ..
   - make
   - ctest --output-on-failure
