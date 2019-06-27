@@ -1,5 +1,5 @@
 # Readme in progress!
-Writing software is a mess, embrace it!
+Software is a mess, embrace it!
 # mess
 *mess* is a zero-runtime-cost header-only C++11 library for publish-subscribe message passing. This is a basic building block for component based programming (a.k.a. message passing, event driven, reactive, publisher-subscriber, signal-slot, dataflow, observer pattern, etc.).
 
@@ -64,6 +64,7 @@ int main(int argc, char **argv)
 }
 ```
 
+# What is *mess* ?
 ## What *mess* saves you
 All messaging frameworks I know have a runtime cost:
 * Memory cost: to store callable objects (function pointers, std::function instances, etc.) used to store the subscription callbacks.
@@ -84,3 +85,18 @@ Admitedly, message-passing frameworks typically offer *much more* functionality 
 The goal of *mess* is to provide component-based functionality, and only this, without compromising **performance**, **readability** and **type-safety**. Of course, you need to pay something to get anything. Here is the cost of *mess*:
 * Compilation time and dependency cost: there is some amount of meta-programming involved in *mess*, but not that much. Still, this slows down compilation. Also, the framework has to know about every component in your program, and every component has to know about the framework. This induces dependencies between components that would normally not have to be aware of each other. There are ways to limit this dependency to a minimum, and in practice I find it not to be much of a problem. If this is a concern, please see the examples/split example.
 * Static structure cost: with *mess*, you cannot add or remove subscribers or callbacks on-the-fly. *mess* only lets you define the **static** structure of you program. I find this to be totally acceptable: a program always has a basic static structure. Some programs have a dynamic structure *on top of the static structure*. *mess* takes case of the static part and *let's you build the dynamic part* if you need it, anyway you like. That way, you only pay the cost of a dynamic framework for those parts of your program that benefit from the added flexibiity.
+
+# How to use *mess*
+0. Decompose your program, identify natural boundaries
+1. Define Channels
+2. Define Endpoints
+	2.1. Define Callbacks
+3. Subscribe Endpoints to Channels
+4. Instantiate the Broker
+5. Publish data
+
+# Anatomy of a Callback
+
+# Splitting
+
+# 

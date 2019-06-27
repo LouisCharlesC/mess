@@ -44,11 +44,14 @@ struct TestChannelByRef {};
 struct TestEndpoint1;
 struct TestEndpoint2;
 
-template<> struct mess::Channel<TestChannelByRef>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
-template<> struct mess::Channel<TestChannelByValue>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
+namespace mess
+{
+template<> struct Channel<TestChannelByRef>: Subscribers<TestEndpoint1, TestEndpoint2> {};
+template<> struct Channel<TestChannelByValue>: Subscribers<TestEndpoint1, TestEndpoint2> {};
 // template<> struct mess::Channel<TestServiceByRef>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
 // template<> struct mess::Channel<TestServiceByValue>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
 // template<> struct mess::Channel<TestSingleProviderService>: mess::Subscribers<TestEndpoint2> {};
+} // namespace mess
 
 // constexpr mess::Channel<TestServiceByRef>::ReturnType testEndpoint1TestServiceByRefReturn = 42;
 // constexpr mess::Channel<TestServiceByValue>::ReturnType testEndpoint1TestServiceByValueReturn = 43.f;
