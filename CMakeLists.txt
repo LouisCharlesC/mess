@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 
 project(mess VERSION 0.2.0)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -33,15 +33,15 @@ endif(DOXYGEN_FOUND)
 include_directories(include)
 
 add_executable(helloworld examples/helloworld.cpp)
-add_executable(helloworldwomess examples/womess/helloworld.cpp)
-add_executable(helloworldunknown examples/unknown/helloworld.cpp)
-add_executable(hellofile examples/hellofile.cpp)
-add_executable(helloworldsplit examples/split/helloworld.cpp examples/split/logger.cpp)
+# add_executable(helloworldwomess examples/womess/helloworld.cpp)
+# add_executable(helloworldunknown examples/unknown/helloworld.cpp)
+# add_executable(hellofile examples/hellofile.cpp)
+# add_executable(helloworldsplit examples/split/helloworld.cpp examples/split/logger.cpp)
 
 find_package(GTest QUIET)
 if(GTEST_FOUND)
     enable_testing()
-    add_subdirectory("tests")
+    # add_subdirectory("tests")
 endif()
 
 install(DIRECTORY include/mess DESTINATION include)
