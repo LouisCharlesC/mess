@@ -3,196 +3,148 @@
  * @author L.-C. C.
  * @brief 
  * @version 0.1
- * @date 2019-05-22
+ * @date 2020-04-06
  * 
- * @copyright Copyright (c) 2019
+ * @copyright Copyright (c) 2020
  * 
  */
 
-#include "mess/mess.h"
+#include <mess/mess.h>
 
-#include "doctest/doctest.h"
+#include <doctest/doctest.h>
 
-#include <algorithm>
-#include <fstream>
-#include <vector>
+int test_function()
+{
+    return 32;
+}
 
-// struct TestMessage
-// {
-// 	TestMessage() = default;
-// 	TestMessage(const TestMessage& other)
-// 	{
-// 		++TestMessage::copyConstructed;
-// 	}
-// 	TestMessage(TestMessage&& other)
-// 	{
-// 		++TestMessage::moveConstructed;
-// 	}
+static int test_static_function()
+{
+    return 32;
+}
 
-// 	static int copyConstructed;
-// 	static int moveConstructed;
-// };
-// int TestMessage::copyConstructed;
-// int TestMessage::moveConstructed;
+constexpr int test_constexpr_function()
+{
+    return 32;
+}
 
-// struct TestChannelByValue {};
-// struct TestChannelByRef {};
-// // struct TestServiceByValue {};
-// // struct TestServiceByRef {};
-// // struct TestSingleProviderService {};
+int test_overload_function()
+{
+    return 32;
+}
 
-// struct TestEndpoint1;
-// struct TestEndpoint2;
+unsigned int test_overload_function(unsigned int=32)
+{
+    return 32;
+}
 
-// namespace mess
-// {
-// template<> struct Channel<TestChannelByRef>: Subscribers<TestEndpoint1, TestEndpoint2> {};
-// template<> struct Channel<TestChannelByValue>: Subscribers<TestEndpoint1, TestEndpoint2> {};
-// // template<> struct mess::Channel<TestServiceByRef>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
-// // template<> struct mess::Channel<TestServiceByValue>: mess::Subscribers<TestEndpoint1, TestEndpoint2> {};
-// // template<> struct mess::Channel<TestSingleProviderService>: mess::Subscribers<TestEndpoint2> {};
-// } // namespace mess
+template<typename T>
+T test_template_function()
+{
+    return 32;
+}
 
-// // constexpr mess::Channel<TestServiceByRef>::ReturnType testEndpoint1TestServiceByRefReturn = 42;
-// // constexpr mess::Channel<TestServiceByValue>::ReturnType testEndpoint1TestServiceByValueReturn = 43.f;
-// // constexpr mess::Channel<TestServiceByRef>::ReturnType testEndpoint2TestServiceByRefReturn = 44;
-// // constexpr mess::Channel<TestServiceByValue>::ReturnType testEndpoint2TestServiceByValueReturn = 45.f;
-// // constexpr mess::Channel<TestSingleProviderService>::ReturnType testEndpoint2TestSingleProviderServiceReturn = 46;
+struct test_class
+{
+    static int test_static_member_func()
+    {
+        return 32;
+    }
+    static int test_static_overloaded_member_func()
+    {
+        return 32;
+    }
+    static unsigned int test_static_overloaded_member_func(unsigned int=32)
+    {
+        return 32;
+    }
+};
 
-// struct TestEndpoint1
-// {
-// 	using Component = TestEndpoint1;
+struct FromFunction;
+struct FromStaticFunction;
+struct FromConstexprFunction;
+struct FromOverloadedFunction;
+struct FromTemplateFunction;
+struct FromStaticMemberFunction;
+struct FromStaticOverloadedMemberFunction;
 
-// 	template<typename Broker>
-// 	static void onPublish(TestChannelByRef, const Broker& broker, Component& core, const TestMessage& message) {}
-// 	template<typename Broker>
-// 	static void onPublish(TestChannelByValue, const Broker& broker, Component& core, TestMessage message) {}
-// 	// template<typename Broker>
-// 	// static mess::Channel<TestServiceByRef>::ReturnType onCall(TestServiceByRef, const Broker& broker, Component& core, const TestMessage& message)
-// 	// {
-// 	// 	return testEndpoint1TestServiceByRefReturn;
-// 	// }
-// 	// template<typename Broker>
-// 	// static mess::Channel<TestServiceByValue>::ReturnType onCall(TestServiceByValue, const Broker& broker, Component& core, TestMessage message)
-// 	// {
-// 	// 	return testEndpoint1TestServiceByValueReturn;
-// 	// }
-// };
-// struct TestEndpoint2: TestEndpoint1
-// {
-// // 	// template<typename Broker>
-// // 	// static mess::Channel<TestServiceByRef>::ReturnType onCall(TestServiceByRef, const Broker& broker, Component& core, const TestMessage& message)
-// // 	// {
-// // 	// 	return testEndpoint2TestServiceByRefReturn;
-// // 	// }
-// // 	// template<typename Broker>
-// // 	// static mess::Channel<TestServiceByValue>::ReturnType onCall(TestServiceByValue, const Broker& broker, Component& core, TestMessage message)
-// // 	// {
-// // 	// 	return testEndpoint2TestServiceByValueReturn;
-// // 	// }
-// // 	// template<typename Broker>
-// // 	// static mess::Channel<TestSingleProviderService>::ReturnType onCall(TestSingleProviderService, const Broker& broker, Component& core, const TestMessage& message)
-// // 	// {
-// // 	// 	return testEndpoint2TestSingleProviderServiceReturn;
-// // 	// }
-// };
+namespace mess
+{
+template<> struct
+ToProduce<FromFunction>:
+    Call<test_function>,
+    WithNoArgs
+{};
+template<> struct
+ToProduce<FromStaticFunction>:
+    Call<test_static_function>,
+    WithNoArgs
+{};
+template<> struct
+ToProduce<FromConstexprFunction>:
+    Call<test_constexpr_function>,
+    WithNoArgs
+{};
+template<> struct
+ToProduce<FromOverloadedFunction>:
+    Call<static_cast<int(*)()>(test_overload_function)>,
+    WithNoArgs
+{};
+template<> struct
+ToProduce<FromTemplateFunction>:
+    Call<test_template_function<int>>,
+    WithNoArgs
+{};
+template<> struct
+ToProduce<FromStaticMemberFunction>:
+    Call<&test_class::test_static_member_func>,
+    WithNoArgs
+{};
+template<> struct
+ToProduce<FromStaticOverloadedMemberFunction>:
+    Call<static_cast<int(*)()>(&test_class::test_static_overloaded_member_func)>,
+    WithNoArgs
+{};
+}
 
-// TEST(HelloWorldTest, WithOrWithoutMess) {
-// 	std::filebuf fb;
-// 	fb.open("../helloworld", std::ios::in|std::ios::binary);
-// 	const auto sizeWithMess = fb.in_avail();
-// 	std::vector<char> withMess(sizeWithMess);
-// 	fb.sgetn(withMess.data(), sizeWithMess);
-// 	fb.close();
-// 	fb.open("../helloworldwomess", std::ios::in|std::ios::binary);
-// 	const auto sizeWithoutMess = fb.in_avail();
-// 	std::vector<char> withoutMess(sizeWithoutMess);
-// 	fb.sgetn(withoutMess.data(), sizeWithoutMess);
+TEST_CASE("Pull from function")
+{
+    auto value = mess::Frame<>::pull<FromFunction>();
+    CHECK_EQ(value, int(32));
+}
 
-// 	EXPECT_EQ(sizeWithMess, sizeWithoutMess);
-// 	EXPECT_TRUE(std::equal(withMess.cbegin(), withMess.cend(), withoutMess.cbegin()));
-// }
+TEST_CASE("Pull from static function")
+{
+    auto value = mess::Frame<>::pull<FromStaticFunction>();
+    CHECK_EQ(value, int(32));
+}
 
-// TEST(HelloWorldTest, WithOrWithoutUnknown) {
-// 	std::filebuf fb;
-// 	fb.open("../helloworld", std::ios::in|std::ios::binary);
-// 	const auto sizeWithoutUnknowns = fb.in_avail();
-// 	std::vector<char> withoutUnknowns(sizeWithoutUnknowns);
-// 	fb.sgetn(withoutUnknowns.data(), sizeWithoutUnknowns);
-// 	fb.close();
-// 	fb.open("../helloworldunknown", std::ios::in|std::ios::binary);
-// 	const auto sizeWithUnknowns = fb.in_avail();
-// 	std::vector<char> withUnknowns(sizeWithUnknowns);
-// 	fb.sgetn(withUnknowns.data(), sizeWithUnknowns);
+TEST_CASE("Pull from constexpr function")
+{
+    constexpr auto value = mess::Frame<>::pull<FromConstexprFunction>();
+    static_assert(value == 32, "Pull from constexpr function test failed!");
+}
 
-// 	EXPECT_EQ(sizeWithoutUnknowns, sizeWithUnknowns);
-// 	EXPECT_TRUE(std::equal(withoutUnknowns.cbegin(), withoutUnknowns.cend(), withUnknowns.cbegin()));
-// }
+TEST_CASE("Pull from overloaded function")
+{
+    auto value = mess::Frame<>::pull<FromOverloadedFunction>();
+    CHECK_EQ(value, int(32));
+}
 
-// struct MessTest : public testing::Test
-// {
-// 	MessTest()
-// 	{
-// 		MessTest::ResetCounters();
-// 	}
+TEST_CASE("Pull from template function")
+{
+    auto value = mess::Frame<>::pull<FromTemplateFunction>();
+    CHECK_EQ(value, int(32));
+}
 
-// 	static void ResetCounters()
-// 	{
-// 		TestMessage::copyConstructed = 0;
-// 		TestMessage::moveConstructed = 0;
-// 	}
+TEST_CASE("Pull from static member function")
+{
+    auto value = mess::Frame<>::pull<FromStaticMemberFunction>();
+    CHECK_EQ(value, int(32));
+}
 
-// 	TestEndpoint1 component1;
-// 	TestEndpoint2 component2;
-
-// 	mess::Broker<TestEndpoint1, TestEndpoint2> broker{component1, component2};
-	
-// 	TestMessage message;
-// };
-
-// TEST_F(MessTest, ConstRefPublishSubByRef) {
-// 	broker.publish<TestChannelByRef>(const_cast<const TestMessage&>(message));
-// 	EXPECT_EQ(TestMessage::copyConstructed, 0);
-// 	EXPECT_EQ(TestMessage::moveConstructed, 0);
-// }
-// TEST_F(MessTest, RefPublishSubByRef) {
-// 	broker.publish<TestChannelByRef>(message);
-// 	EXPECT_EQ(TestMessage::copyConstructed, 0);
-// 	EXPECT_EQ(TestMessage::moveConstructed, 0);
-// }
-// TEST_F(MessTest, MovePublishSubByRef) {
-// 	broker.publish<TestChannelByRef>(std::move(message));
-// 	EXPECT_EQ(TestMessage::copyConstructed, 0);
-// 	EXPECT_EQ(TestMessage::moveConstructed, 0);
-// }
-// TEST_F(MessTest, ConstRefPublishSubByValue) {
-// 	broker.publish<TestChannelByValue>(const_cast<const TestMessage&>(message));
-// 	EXPECT_EQ(TestMessage::copyConstructed, 2);
-// 	EXPECT_EQ(TestMessage::moveConstructed, 0);
-// }
-// TEST_F(MessTest, RefPublishSubByValue) {
-// 	broker.publish<TestChannelByValue>(message);
-// 	EXPECT_EQ(TestMessage::copyConstructed, 2);
-// 	EXPECT_EQ(TestMessage::moveConstructed, 0);
-// }
-// TEST_F(MessTest, MovePublishSubByValue) {
-// 	broker.publish<TestChannelByValue>(std::move(message));
-// 	EXPECT_EQ(TestMessage::copyConstructed, 1);
-// 	EXPECT_EQ(TestMessage::moveConstructed, 1);
-// }
-
-// // // TEST_F(MessTest, ConstRefCallProvideByRef) {
-// // // 	auto response = broker.call<TestServiceByRef>(const_cast<const TestMessage&>(message));
-// // // 	EXPECT_EQ(TestMessage::copyConstructed, 0);
-// // // 	EXPECT_EQ(TestMessage::moveConstructed, 0);
-
-// // // 	EXPECT_EQ(std::get<0>(response), testEndpoint2TestServiceByRefReturn);
-// // // 	EXPECT_EQ(std::get<1>(response), testEndpoint1TestServiceByRefReturn);
-// // // }
-// // // TEST_F(MessTest, SingleProviderService) {
-// // // 	auto response = broker.call<TestSingleProviderService>(const_cast<const TestMessage&>(message));
-// // // 	EXPECT_EQ(TestMessage::copyConstructed, 0);
-// // // 	EXPECT_EQ(TestMessage::moveConstructed, 0);
-
-// // // 	EXPECT_EQ(response, testEndpoint2TestSingleProviderServiceReturn);
-// // // }
+TEST_CASE("Pull from static overloaded member function")
+{
+    auto value = mess::Frame<>::pull<FromStaticOverloadedMemberFunction>();
+    CHECK_EQ(value, int(32));
+}

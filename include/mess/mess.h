@@ -11,60 +11,45 @@
 
 #pragma once
 
-#include "detect.h"
-#include "dispatch.h"
-
-#include <cstddef>
-#include <tuple>
-#include <utility>
-
 namespace mess
 {
-	/**
-	 * @brief The class through which messages can be published to
-	 * Channels.
-	 * 
-	 * Either provide all Components for the Components at construction,
-	 * or use the Builder to provide them one at a time using the set()
-	 * function.
-	 * 
-	 * @tparam Components The Components whose subscription Callbacks the
-	 * Broker can call.
-	 */
-	template<typename... Components>
-	class Hub
+	template<typename O>
+	struct ToProduce {};
+
+	template <auto F>
+	struct Call;
+
+	template<typename... Is>
+	struct WithArgs {};
+	using WithNoArgs = WithArgs<>;
+
+	template <typename OwnerT, typename R, typename... Args, R(OwnerT::*F)(Args...)>
+	struct Call<F>
 	{
-	public:
-
-		/// Number of Components known by this Hub
-		static constexpr auto NbrOfComponents = sizeof...(Components);
-
-		/// Tuple of Components
-		using ComponentsTuple = std::tuple<Components...>;
-
-		/// Tuple to hold references to the Cores
-		using CoresTuple = std::tuple<typename detect::Core<Components>::type...>;
-
-		template<std::size_t Index>
-		using Component = typename std::tuple_element<Index, ComponentsTuple>::type;
-		template<std::size_t Index>
-		using Core = typename std::tuple_element<Index, CoresTuple>::type;
-		/**
-		 * @brief Construct a new Broker.
-		 * 
-		 * @param components One Component per Component known by the Broker
-		 */
-		Hub(typename detect::Core<Components>::type&... cores):
-			m_cores(cores...)
-		{}
-
-		template<typename Tag, typename... Payload>
-		auto send(Payload&&... message) const -> void
-		{
-			dispatch::To<Tag>::template With<Hub, Payload...>::start(*this, std::forward<Payload>(message)...);
-		}
-
-		/// Refrence to the components
-		const CoresTuple m_cores;
+		static constexpr auto func = F;
+		using Return = R;
 	};
-}
+	template <typename OwnerT, typename R, typename... Args, R(OwnerT::*F)(Args...) const>
+	struct Call<F>
+	{
+		static constexpr auto func = F;
+		using Return = R;
+	};
+	template <typename R, typename... Args, R(*F)(Args...)>
+	struct Call<F>
+	{
+		static constexpr auto func = F;
+		using Return = R;
+	};
+
+	template<template<typename> class DataFlow = ToProduce>
+	struct Frame
+	{
+		template<typename O>
+		static constexpr typename DataFlow<O>::Call::Return pull()
+		{
+			return DataFlow<O>::Call::func();
+		}
+	};
+
+} // namespace mess
