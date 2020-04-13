@@ -27,23 +27,26 @@ namespace mess
 	struct Call<F>
 	{
 		static constexpr auto func = F;
+		using ReturnType = R;
 	};
 	template <typename OwnerT, typename R, typename... Args, R(OwnerT::*F)(Args...) const>
 	struct Call<F>
 	{
 		static constexpr auto func = F;
+		using ReturnType = R;
 	};
 	template <typename R, typename... Args, R(*F)(Args...)>
 	struct Call<F>
 	{
 		static constexpr auto func = F;
+		using ReturnType = R;
 	};
 
 	template<template<typename> class DataFlow = ToProduce>
 	struct Frame
 	{
 		template<typename O>
-		static constexpr decltype(DataFlow<O>::Call::func()) pull()
+		static constexpr typename DataFlow<O>::Call::ReturnType pull()
 		{
 			return DataFlow<O>::Call::func();
 		}
