@@ -1,10 +1,6 @@
 cmake_minimum_required(VERSION 3.9.2)
 
-cmake_policy(SET CMP0048 NEW)
-project(mess VERSION 0.3.0
-			 LANGUAGES CXX
-			 DESCRIPTION "Compile-time, header-only C++17 message passing framework."
-             HOMEPAGE_URL "https://github.com/LouisCharlesC/mess")
+project(mess VERSION 0.3.0 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 include(GNUInstallDirs)
