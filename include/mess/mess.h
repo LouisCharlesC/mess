@@ -17,7 +17,7 @@ namespace mess
 	struct ToProduce {};
 
 	template <auto F>
-	struct Call;
+	struct Call {};
 
 	template<typename... Is>
 	struct WithArgs {};
