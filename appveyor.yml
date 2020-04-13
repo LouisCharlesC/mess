@@ -3,8 +3,8 @@ image:
 - Visual Studio 2017
 - Visual Studio 2015
 configuration:
-- Debug
 - Release
+- Debug
 platform:
 - x86
 - x64
@@ -41,6 +41,8 @@ build_script:
     cmake --build . --config $env:CONFIGURATION
 test_script:
 - cmd: >-
-    cd build
+    cd build/tests
+
+    dir
 
     ctest --output-on-failure -C %CONFIGURATION%
