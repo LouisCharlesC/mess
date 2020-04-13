@@ -60,13 +60,13 @@ struct test_class
     }
 };
 
-struct FromFunction {};
-struct FromStaticFunction {};
-struct FromConstexprFunction {};
-struct FromOverloadedFunction {};
-struct FromTemplateFunction {};
-struct FromStaticMemberFunction {};
-struct FromStaticOverloadedMemberFunction {};
+struct FromFunction;
+struct FromStaticFunction;
+struct FromConstexprFunction;
+struct FromOverloadedFunction;
+struct FromTemplateFunction;
+struct FromStaticMemberFunction;
+struct FromStaticOverloadedMemberFunction;
 
 namespace mess
 {
