@@ -21,15 +21,17 @@ TEST_CASE("Helloworld compiles to same binary with or without mess")
 {
 	std::filebuf fb;
 	fb.open("../helloworld", std::ios::in|std::ios::binary);
+	REQUIRE(fb.is_open());
 	const auto sizeWithMess = fb.in_avail();
 	std::vector<char> withMess(sizeWithMess);
 	fb.sgetn(withMess.data(), sizeWithMess);
 	fb.close();
 	fb.open("../helloworldwomess", std::ios::in|std::ios::binary);
+	REQUIRE(fb.is_open());
 	const auto sizeWithoutMess = fb.in_avail();
 	std::vector<char> withoutMess(sizeWithoutMess);
 	fb.sgetn(withoutMess.data(), sizeWithoutMess);
 
-	CHECK_EQ(sizeWithMess, sizeWithoutMess);
+	REQUIRE_EQ(sizeWithMess, sizeWithoutMess);
 	CHECK(std::equal(withMess.cbegin(), withMess.cend(), withoutMess.cbegin()));
 }

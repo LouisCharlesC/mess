@@ -33,10 +33,12 @@ script:
 - cd build_debug
 - cmake -D CMAKE_BUILD_TYPE=Debug ..
 - make
-- ./tests/tests
+- cd tests
+- ./tests
 - cd $TRAVIS_BUILD_DIR
 - mkdir build_release
 - cd build_release
 - cmake -D CMAKE_BUILD_TYPE=Release ..
 - make
-- ./tests/tests
+- cd tests
+- ./tests
