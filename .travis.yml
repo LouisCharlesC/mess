@@ -11,9 +11,9 @@ arch:
 - s390x
 jobs:
   include:
-  - os: linux
-    dist: xenial
-    compiler: gcc
+  # - os: linux
+  #   dist: xenial
+  #   compiler: gcc
   - os: linux
     dist: xenial
     compiler: clang
