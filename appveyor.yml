@@ -41,6 +41,6 @@ build_script:
     cmake --build . --config $env:CONFIGURATION
 test_script:
 - cmd: >-
-    cd build/tests
+    cd build
 
     ctest --output-on-failure -C %CONFIGURATION%
