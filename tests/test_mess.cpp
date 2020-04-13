@@ -60,13 +60,13 @@ struct test_class
     }
 };
 
-struct FromFunction;
-struct FromStaticFunction;
-struct FromConstexprFunction;
-struct FromOverloadedFunction;
-struct FromTemplateFunction;
-struct FromStaticMemberFunction;
-struct FromStaticOverloadedMemberFunction;
+struct FromFunction {};
+struct FromStaticFunction {};
+struct FromConstexprFunction {};
+struct FromOverloadedFunction {};
+struct FromTemplateFunction {};
+struct FromStaticMemberFunction {};
+struct FromStaticOverloadedMemberFunction {};
 
 namespace mess
 {
@@ -109,13 +109,13 @@ ToProduce<FromStaticOverloadedMemberFunction>:
 
 TEST_CASE("Pull from function")
 {
-    auto value = mess::Frame<>::pull<FromFunction>();
+    const auto value = mess::Frame<>::pull<FromFunction>();
     CHECK_EQ(value, int(32));
 }
 
 TEST_CASE("Pull from static function")
 {
-    auto value = mess::Frame<>::pull<FromStaticFunction>();
+    const auto value = mess::Frame<>::pull<FromStaticFunction>();
     CHECK_EQ(value, int(32));
 }
 
@@ -127,24 +127,24 @@ TEST_CASE("Pull from constexpr function")
 
 TEST_CASE("Pull from overloaded function")
 {
-    auto value = mess::Frame<>::pull<FromOverloadedFunction>();
+    const auto value = mess::Frame<>::pull<FromOverloadedFunction>();
     CHECK_EQ(value, int(32));
 }
 
 TEST_CASE("Pull from template function")
 {
-    auto value = mess::Frame<>::pull<FromTemplateFunction>();
+    const auto value = mess::Frame<>::pull<FromTemplateFunction>();
     CHECK_EQ(value, int(32));
 }
 
 TEST_CASE("Pull from static member function")
 {
-    auto value = mess::Frame<>::pull<FromStaticMemberFunction>();
+    const auto value = mess::Frame<>::pull<FromStaticMemberFunction>();
     CHECK_EQ(value, int(32));
 }
 
 TEST_CASE("Pull from static overloaded member function")
 {
-    auto value = mess::Frame<>::pull<FromStaticOverloadedMemberFunction>();
+    const auto value = mess::Frame<>::pull<FromStaticOverloadedMemberFunction>();
     CHECK_EQ(value, int(32));
 }

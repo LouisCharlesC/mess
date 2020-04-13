@@ -43,6 +43,4 @@ test_script:
 - cmd: >-
     cd build/tests
 
-    dir
-
     ctest --output-on-failure -C %CONFIGURATION%
