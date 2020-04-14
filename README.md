@@ -72,7 +72,7 @@ struct PrintHelloWorld:
 
 int main(int argc, char **argv)
 {
-     mess::pull<Logger>() << "Hello, world!\n";
+     mess::pull<PrintHelloWorld>();
 }
 ```
 Here is the plain "Hello, world!" the above example compiles equal to:
