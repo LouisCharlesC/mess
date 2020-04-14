@@ -31,5 +31,5 @@ struct Logger:
 
 int main(int argc, char **argv)
 {
-     mess::Frame::pull<Logger>() << "Hello, world!\n";
+     mess::pull<Logger>() << "Hello, world!\n";
 }

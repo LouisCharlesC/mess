@@ -15,99 +15,94 @@
 
 static constexpr int kTheAnswer = 42;
 
-int test_function()
+constexpr int test_function()
 {
     return kTheAnswer;
 }
-
-static int test_static_function()
-{
-    return kTheAnswer;
-}
-
-constexpr int test_constexpr_function()
-{
-    return kTheAnswer;
-}
-
-int test_overload_function()
-{
-    return kTheAnswer;
-}
-
-unsigned int test_overload_function(unsigned int=kTheAnswer)
-{
-    return kTheAnswer;
-}
-
-template<typename T>
-T test_template_function()
-{
-    return kTheAnswer;
-}
-
-struct test_class
-{
-    static int test_static_member_func()
-    {
-        return kTheAnswer;
-    }
-    static int test_static_overloaded_member_func()
-    {
-        return kTheAnswer;
-    }
-    static unsigned int test_static_overloaded_member_func(unsigned int=kTheAnswer)
-    {
-        return kTheAnswer;
-    }
-    int test_member_func()
-    {
-        return kTheAnswer;
-    }
-    int test_member_const_func() const
-    {
-        return kTheAnswer;
-    }
-};
-
-test_class test_instance()
-{
-    return test_class();
-}
-
-constexpr int test_dependent_constexpr_function(int i)
-{
-    return i;
-}
-
 struct FromFunction:
     mess::Call<test_function>,
     mess::WithNoArgumentss
 {};
+
+constexpr static int test_static_function()
+{
+    return kTheAnswer;
+}
 struct FromStaticFunction:
     mess::Call<test_static_function>,
     mess::WithNoArgumentss
 {};
-struct FromConstexprFunction:
-    mess::Call<test_constexpr_function>,
-    mess::WithNoArgumentss
-{};
+
+constexpr int test_overload_function()
+{
+    return kTheAnswer;
+}
+unsigned int test_overload_function(unsigned int=kTheAnswer)
+{
+    return kTheAnswer;
+}
 struct FromOverloadedFunction:
     mess::Call<static_cast<int(*)()>(test_overload_function)>,
     mess::WithNoArgumentss
 {};
+
+template<typename T>
+constexpr T test_template_function()
+{
+    return kTheAnswer;
+}
 struct FromTemplateFunction:
     mess::Call<test_template_function<int>>,
     mess::WithNoArgumentss
 {};
+
+struct test_static_class
+{
+    constexpr static int test_static_member_func()
+    {
+        return kTheAnswer;
+    }
+    constexpr static int test_static_member_overloaded_func()
+    {
+        return kTheAnswer;
+    }
+    static unsigned int test_static_member_overloaded_func(unsigned int=kTheAnswer)
+    {
+        return kTheAnswer;
+    }
+};
 struct FromStaticMemberFunction:
-    mess::Call<&test_class::test_static_member_func>,
+    mess::Call<&test_static_class::test_static_member_func>,
     mess::WithNoArgumentss
 {};
 struct FromStaticOverloadedMemberFunction:
-    mess::Call<static_cast<int(*)()>(&test_class::test_static_overloaded_member_func)>,
+    mess::Call<static_cast<int(*)()>(&test_static_class::test_static_member_overloaded_func)>,
     mess::WithNoArgumentss
 {};
+
+struct test_class
+{
+    constexpr int test_member_func()
+    {
+        return kTheAnswer;
+    }
+    constexpr int test_member_const_func() const
+    {
+        return kTheAnswer;
+    }
+    constexpr int test_member_overloaded_func()
+    {
+        return kTheAnswer;
+    }
+    unsigned int test_member_overloaded_func(unsigned int=kTheAnswer)
+    {
+        return kTheAnswer;
+    }
+};
+constexpr test_class test_instance()
+{
+    return test_class();
+}
 struct TestInstance:
     mess::Call<test_instance>,
     mess::WithNoArgumentss
@@ -122,79 +117,50 @@ struct FromMemberConstFunction:
     mess::OnInstance<TestInstance>,
     mess::WithNoArgumentss
 {};
-struct FromDependent:
-    mess::Call<test_dependent_constexpr_function>,
+struct FromMemberOverloadedFunction:
+    mess::Call<static_cast<int(test_class::*)()>(&test_class::test_member_overloaded_func)>,
+    mess::OnInstance<TestInstance>,
+    mess::WithNoArgumentss
+{};
+
+constexpr int test_one_dependency_function(int i)
+{
+    return i;
+}
+struct FromOneDependency:
+    mess::Call<test_one_dependency_function>,
     mess::WithArguments<FromFunction>
 {};
-struct FromConstexprDependent:
-    mess::Call<test_dependent_constexpr_function>,
-    mess::WithArguments<FromConstexprFunction>
+
+constexpr int test_two_dependency_function(int i, int j)
+{
+    return (i+j)/2;
+}
+struct FromTwoDependency:
+    mess::Call<test_two_dependency_function>,
+    mess::WithArguments<FromFunction, FromFunction>
+{};
+struct FromMultiLevelDependency:
+    mess::Call<test_two_dependency_function>,
+    mess::WithArguments<FromFunction, FromTwoDependency>
 {};
 
-TEST_CASE("Pull from function")
+TEST_CASE_TEMPLATE_DEFINE("mess::pull", T, PullTestId)
 {
-    const auto value = mess::Frame::pull<FromFunction>();
+    const auto value = mess::pull<T>();
     CHECK_EQ(value, kTheAnswer);
 }
-
-TEST_CASE("Pull from static function")
+TEST_CASE_TEMPLATE_DEFINE("constexpr mess::pull", T, ConstexprPullTestId)
 {
-    const auto value = mess::Frame::pull<FromStaticFunction>();
-    CHECK_EQ(value, kTheAnswer);
-}
-
-TEST_CASE("Pull from constexpr function")
-{
-    constexpr auto value = mess::Frame::pull<FromConstexprFunction>();
+    constexpr auto value = mess::pull<T>();
     static_assert(value == kTheAnswer, "Pull from constexpr function test failed!");
-    CHECK_EQ(value, kTheAnswer);
 }
 
-TEST_CASE("Pull from overloaded function")
-{
-    const auto value = mess::Frame::pull<FromOverloadedFunction>();
-    CHECK_EQ(value, kTheAnswer);
-}
+using TestCases = std::tuple<
+    FromFunction, FromStaticFunction, FromOverloadedFunction, FromTemplateFunction,
+    FromStaticMemberFunction, FromStaticOverloadedMemberFunction,
+    FromMemberFunction, FromMemberConstFunction, FromMemberOverloadedFunction,
+    FromOneDependency, FromTwoDependency, FromMultiLevelDependency>;
 
-TEST_CASE("Pull from template function")
-{
-    const auto value = mess::Frame::pull<FromTemplateFunction>();
-    CHECK_EQ(value, kTheAnswer);
-}
-
-TEST_CASE("Pull from static member function")
-{
-    const auto value = mess::Frame::pull<FromStaticMemberFunction>();
-    CHECK_EQ(value, kTheAnswer);
-}
-
-TEST_CASE("Pull from static overloaded member function")
-{
-    const auto value = mess::Frame::pull<FromStaticOverloadedMemberFunction>();
-    CHECK_EQ(value, kTheAnswer);
-}
-
-TEST_CASE("Pull from member function")
-{
-    const auto value = mess::Frame::pull<FromMemberFunction>();
-    CHECK_EQ(value, kTheAnswer);
-}
-
-TEST_CASE("Pull from member const function")
-{
-    const auto value = mess::Frame::pull<FromMemberConstFunction>();
-    CHECK_EQ(value, kTheAnswer);
-}
-
-TEST_CASE("Pull from dependent function")
-{
-    const auto value = mess::Frame::pull<FromDependent>();
-    CHECK_EQ(value, kTheAnswer);
-}
-
-TEST_CASE("Pull from constexpr dependent function")
-{
-    constexpr auto value = mess::Frame::pull<FromConstexprFunction>();
-    static_assert(value == kTheAnswer, "Pull from constexpr dependent function test failed!");
-    CHECK_EQ(value, kTheAnswer);
-}
+TEST_CASE_TEMPLATE_APPLY(PullTestId, TestCases);
+TEST_CASE_TEMPLATE_APPLY(ConstexprPullTestId,  TestCases);
