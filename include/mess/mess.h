@@ -50,31 +50,29 @@ namespace mess
 	};
 
 	template<typename... Is>
-	struct WithArguments
-	{
-		using Arguments = WithArguments;
-	};
+	struct WithArguments {};
 	using WithNoArgumentss = WithArguments<>;
 
-	template<typename> [[nodiscard]] static constexpr decltype(auto) pull();
+	template<typename> [[nodiscard]] constexpr decltype(auto) pull();
 
-	namespace impl
+	template<typename O>
+	struct Impl
 	{
-		template<typename O, typename... Is>
+		template<typename... Is>
 		static constexpr decltype(auto) memberOrNot(::mess::impl::IsNonMember, typename O::template WithArguments<Is...>)
 		{
 			return O::Call::Function(::mess::pull<Is>()...);
 		}
-		template<typename O, typename... Is>
+		template<typename... Is>
 		static constexpr decltype(auto) memberOrNot(::mess::impl::IsMember, typename O::template WithArguments<Is...>)
 		{
 			return (pull<typename O::OnInstance::Instance>().*O::Call::Function)(pull<Is>()...);
 		}
-	} // namespace impl
+	};
 
 	template<typename O>
-	[[nodiscard]] static constexpr decltype(auto) pull()
+	[[nodiscard]] constexpr decltype(auto) pull()
 	{
-		return ::mess::impl::memberOrNot<O>(typename O::MemberOrNot(), typename O::Arguments());
+		return ::mess::Impl<O>::memberOrNot(typename O::MemberOrNot(), typename O::WithArguments());
 	}
 } // namespace mess
