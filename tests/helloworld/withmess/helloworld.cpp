@@ -24,18 +24,12 @@ std::ostream& cerrLogger()
 }
 }
 
-struct Logger;
-
-namespace mess
-{
-    template<> struct
-    ToProduce<Logger>:
-        Call<coutLogger>, // replace with: "Call<cerrLogger>," to change the logger!
-        WithNoArgs
-    {};
-}
+struct Logger:
+    mess::Call<coutLogger>, // replace with: "mess::Call<cerrLogger>," to change the logger!
+    mess::WithNoArgumentss
+{};
 
 int main(int argc, char **argv)
 {
-     mess::Frame<>::pull<Logger>() << "Hello, world!\n";
+     mess::Frame::pull<Logger>() << "Hello, world!\n";
 }

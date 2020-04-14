@@ -11,41 +11,63 @@
 
 #pragma once
 
+#include <type_traits>
+
 namespace mess
 {
-	template<typename O>
-	struct ToProduce {};
+	using IsMember = std::true_type;
+	using IsNonMember = std::false_type;
 
 	template <auto F>
-	struct Call;
-
-	template<typename... Is>
-	struct WithArgs {};
-	using WithNoArgs = WithArgs<>;
-
-	template <typename OwnerT, typename R, typename... Args, R(OwnerT::*F)(Args...)>
+	struct Call {};
+	template <typename C, typename R, typename... Args, R(C::*F)(Args...)>
 	struct Call<F>
 	{
-		static constexpr auto func = F;
+		static constexpr auto Function = F;
+		using Class = C;
 	};
-	template <typename OwnerT, typename R, typename... Args, R(OwnerT::*F)(Args...) const>
+	template <typename C, typename R, typename... Args, R(C::*F)(Args...) const>
 	struct Call<F>
 	{
-		static constexpr auto func = F;
+		static constexpr auto Function = F;
+		using Class = C;
 	};
 	template <typename R, typename... Args, R(*F)(Args...)>
 	struct Call<F>
 	{
-		static constexpr auto func = F;
+		static constexpr auto Function = F;
+		using MemberOrNot = IsNonMember;
 	};
 
-	template<template<typename> class DataFlow = ToProduce>
+	template<typename I>
+	struct OnInstance
+	{
+		using Instance = I;
+		using MemberOrNot = IsMember;
+	};
+
+	template<typename... Is>
+	struct WithArguments {};
+	using WithNoArgumentss = WithArguments<>;
+
 	struct Frame
 	{
 		template<typename O>
-		static constexpr decltype(DataFlow<O>::Call::func()) pull()
+		[[nodiscard]] static constexpr decltype(auto) pull()
 		{
-			return DataFlow<O>::Call::func();
+			return memberOrNot<O>(typename O::MemberOrNot(), typename O::WithArguments());
+		}
+
+	private:
+		template<typename O, typename... Is>
+		static constexpr decltype(auto) memberOrNot(IsNonMember, typename O::template WithArguments<Is...>)
+		{
+			return O::Call::Function(pull<Is>()...);
+		}
+		template<typename O, typename... Is>
+		static constexpr decltype(auto) memberOrNot(IsMember, typename O::template WithArguments<Is...>)
+		{
+			return (pull<typename O::OnInstance::Instance>().*O::Call::Function)(pull<Is>()...);
 		}
 	};
 
