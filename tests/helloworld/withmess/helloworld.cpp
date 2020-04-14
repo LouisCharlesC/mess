@@ -13,7 +13,7 @@
 
 #include <iostream>
 
-namespace {
+namespace { // necessary not to include these optimized functions in the binary!
 std::ostream& coutLogger()
 {
     return std::cout;

@@ -17,8 +17,8 @@ namespace mess
 {
 	namespace impl
 	{
-		using IsMember = std::true_type;
-		using IsNonMember = std::false_type;
+		using IsMember = ::std::true_type;
+		using IsNonMember = ::std::false_type;
 	} // namespace impl
 
 	template <auto F>
@@ -39,18 +39,21 @@ namespace mess
 	struct Call<F>
 	{
 		static constexpr auto Function = F;
-		using MemberOrNot = impl::IsNonMember;
+		using MemberOrNot = ::mess::impl::IsNonMember;
 	};
 
 	template<typename I>
 	struct OnInstance
 	{
 		using Instance = I;
-		using MemberOrNot = impl::IsMember;
+		using MemberOrNot = ::mess::impl::IsMember;
 	};
 
 	template<typename... Is>
-	struct WithArguments {};
+	struct WithArguments
+	{
+		using Arguments = WithArguments;
+	};
 	using WithNoArgumentss = WithArguments<>;
 
 	template<typename> [[nodiscard]] static constexpr decltype(auto) pull();
@@ -58,12 +61,12 @@ namespace mess
 	namespace impl
 	{
 		template<typename O, typename... Is>
-		static constexpr decltype(auto) memberOrNot(impl::IsNonMember, typename O::template WithArguments<Is...>)
+		static constexpr decltype(auto) memberOrNot(::mess::impl::IsNonMember, typename O::template WithArguments<Is...>)
 		{
 			return O::Call::Function(::mess::pull<Is>()...);
 		}
 		template<typename O, typename... Is>
-		static constexpr decltype(auto) memberOrNot(impl::IsMember, typename O::template WithArguments<Is...>)
+		static constexpr decltype(auto) memberOrNot(::mess::impl::IsMember, typename O::template WithArguments<Is...>)
 		{
 			return (pull<typename O::OnInstance::Instance>().*O::Call::Function)(pull<Is>()...);
 		}
@@ -72,6 +75,6 @@ namespace mess
 	template<typename O>
 	[[nodiscard]] static constexpr decltype(auto) pull()
 	{
-		return ::mess::impl::memberOrNot<O>(typename O::MemberOrNot(), typename O::WithArguments());
+		return ::mess::impl::memberOrNot<O>(typename O::MemberOrNot(), typename O::Arguments());
 	}
 } // namespace mess

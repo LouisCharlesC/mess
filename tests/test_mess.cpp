@@ -129,7 +129,7 @@ constexpr int test_one_dependency_function(int i)
 }
 struct FromOneDependency:
     mess::Call<test_one_dependency_function>,
-    mess::WithArguments<FromFunction>
+    mess::WithArguments<FromTemplateFunction>
 {};
 
 constexpr int test_two_dependency_function(int i, int j)
@@ -138,7 +138,7 @@ constexpr int test_two_dependency_function(int i, int j)
 }
 struct FromTwoDependency:
     mess::Call<test_two_dependency_function>,
-    mess::WithArguments<FromFunction, FromFunction>
+    mess::WithArguments<FromStaticOverloadedMemberFunction, FromMemberConstFunction>
 {};
 struct FromMultiLevelDependency:
     mess::Call<test_two_dependency_function>,
