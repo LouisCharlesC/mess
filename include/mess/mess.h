@@ -22,21 +22,21 @@ namespace mess
 	} // namespace impl
 
 	template <auto F>
-	struct Call {};
+	struct IsTheResultOfCalling {};
 	template <typename C, typename R, typename... Args, R(C::*F)(Args...)>
-	struct Call<F>
+	struct IsTheResultOfCalling<F>
 	{
 		static constexpr auto Function = F;
 		using Class = C;
 	};
 	template <typename C, typename R, typename... Args, R(C::*F)(Args...) const>
-	struct Call<F>
+	struct IsTheResultOfCalling<F>
 	{
 		static constexpr auto Function = F;
 		using Class = C;
 	};
 	template <typename R, typename... Args, R(*F)(Args...)>
-	struct Call<F>
+	struct IsTheResultOfCalling<F>
 	{
 		static constexpr auto Function = F;
 		using MemberOrNot = ::mess::impl::IsNonMember;
@@ -49,9 +49,11 @@ namespace mess
 		using MemberOrNot = ::mess::impl::IsMember;
 	};
 
-	template<typename... Is>
+	template<typename... Args>
 	struct WithArguments {};
 	using WithNoArgument = WithArguments<>;
+	template<typename Arg>
+	using WithArgument = WithArguments<Arg>;
 
 	template<typename> [[nodiscard]] constexpr decltype(auto) pull();
 
@@ -61,12 +63,12 @@ namespace mess
 		template<typename... Is>
 		static constexpr decltype(auto) memberOrNot(::mess::impl::IsNonMember, typename O::template WithArguments<Is...>)
 		{
-			return O::Call::Function(::mess::pull<Is>()...);
+			return O::IsTheResultOfCalling::Function(::mess::pull<Is>()...);
 		}
 		template<typename... Is>
 		static constexpr decltype(auto) memberOrNot(::mess::impl::IsMember, typename O::template WithArguments<Is...>)
 		{
-			return (pull<typename O::OnInstance::Instance>().*O::Call::Function)(pull<Is>()...);
+			return (pull<typename O::OnInstance::Instance>().*O::IsTheResultOfCalling::Function)(pull<Is>()...);
 		}
 	};
 

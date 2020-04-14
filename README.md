@@ -5,12 +5,13 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/3550cw0y96igwlye/branch/master?svg=true)](https://ci.appveyor.com/project/LouisCharlesC/mess/branch/master)
 
 # *mess*
-*mess* is a compile-time header-only C++17 library for dataflow programing (a.k.a. message passing, event driven, actors, reactors, publisher-subscriber, signal-slot, observer pattern, etc.). Tons of such frameworks exist, but *mess* is 100% optimized away by the compiler (see section [Example](#Example) for a demo).
+*mess* is a compile-time, header-only C++17 library for dataflow programing (a.k.a. message passing, event driven, actors, reactors, publisher-subscriber, signal-slot, observer pattern, etc.).  
+Tons of such frameworks exist, but *mess* is 100% non-intrusive and optimized away by the compiler (see section [Hello world](#Hello-world) for a demo).
 
 ## Briefly
 *mess* lets you name the values your program can compute so you can express the dependencies between them. This forms your program's dataflow. Once this is setup, you can ask *mess* to produce any named value. The execution of the dataflow is runtime, but its setup is compile-time. This gives you the flexibility of a message passing framework and the performance of plain C++ function calls!
 
-As an example, here is how to tell *mess* that a value called "FilteredValue" exists, and that it can be computed by calling the member function "filter" from a value called "LowPassFilter" with as its sole argument the value called "GoodLowPassParameter" (something like `FilteredValue = LowPassFilter.filter(GoodLowPassParameter);`):
+As an example, here is how to tell *mess* that a value called `FilteredValue` exists, and that it can be computed by calling the member function `filter` from a value called `LowPassFilter` with as its sole argument the value called `GoodLowPassParameter` (something like `FilteredValue = LowPassFilter.filter(GoodLowPassParameter);`):
 ```c++
 struct FilteredValue:
     mess::Call<filter>,
@@ -18,13 +19,13 @@ struct FilteredValue:
     mess::WithArgs<GoodLowPassParameter>
 {};
 ```
-You can get "FilteredValue" by calling `mess::pull<FilteredValue>()`. The function is called `pull` because you explicitly ask for the value to be produced and *mess* will compute any other value it needs to do so. If the dependencies cannot be resolved or the types don't fit, your program won't compile. *mess* does not yet allow `push`ing values (i.e. producing every value that depends on the `push`ed one).
+You can get `FilteredValue` by calling `mess::pull<FilteredValue>()`. The function is called `pull` because you explicitly ask for the value to be produced and *mess* will compute any other value it needs to do so. If the dependencies cannot be resolved or the types don't fit, your program won't compile. *mess* does not allow `push`ing values (i.e. producing every value that depends on the `push`ed one). I'm not sure if it's possible, or desirable.
 
 # WIP
 *mess* is currently under development. This version is out there for me to gather feedback about the terminology, usage and useful features. I am working on version 1.0, which as a bare minimum will:
 1. Allow pulling several values with a single function call.
 1. Compute dependencies only once, even if they are needed by more than one of the pulled values.
-1. Order the calls so that computed dependencies can be moved if possible, without risking use-after-move or any other bad surprise.
+1. Order the calls so that computed dependencies can be moved if possible, without risking use-after-move or any other bad surprises.
 
 It is foreseen that future versions might include:
 1. Provide nice compilation errors rather than the typical template instantiation error messages.
@@ -34,7 +35,7 @@ It is foreseen that future versions might include:
 1. Concurrency (through coroutines?).
 1. Multi-theading.
 
-# Example
+# Hello world
 Here is *mess*'s "Hello, world!". You should know that with optimizations enabled, this code compiles to the exact same executable as a plain C++ "Hello, world!" (shown below). This is verified in the tests.
 
 ```c++
@@ -42,16 +43,31 @@ Here is *mess*'s "Hello, world!". You should know that with optimizations enable
 
 #include <iostream>
 
-namespace { // avoids including this function in the binary!
-    std::ostream& getLogger()
+namespace {
+    std::ostream& getCout()
     {
         return std::cout;
     }
+    const char* getHelloWorld()
+    {
+        return "Hello, world!\n";
+    }
 }
 
-struct Logger:
-    mess::Call<getLogger>,
-    mess::WithNoArgumentss
+struct StdCout:
+    mess::IsTheResultOfCalling<getCout>,
+    mess::WithNoArgument
+{};
+struct HelloWorld:
+    mess::IsTheResultOfCalling<getHelloWorld>,
+    mess::WithNoArgument
+{};
+struct PrintHelloWorld:
+    // Sorry for the line below, but using an operator from the std namespace proves the non-intrusiveness of mess!
+    // And demonstrates a current limitation of mess: you must manually resolve overloads and provide template arguments.
+    // So, here's a static cast to a function pointer to the overload-resolved, template-provided std::operator<<().
+    mess::IsTheResultOfCalling<static_cast<std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*)>(std::operator<<<std::char_traits<char>>)>, 
+    mess::WithArguments<StdCout, HelloWorld>
 {};
 
 int main(int argc, char **argv)
