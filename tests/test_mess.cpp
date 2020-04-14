@@ -21,7 +21,7 @@ constexpr int test_function()
 }
 struct FromFunction:
     mess::Call<test_function>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 
 constexpr static int test_static_function()
@@ -30,7 +30,7 @@ constexpr static int test_static_function()
 }
 struct FromStaticFunction:
     mess::Call<test_static_function>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 
 constexpr int test_overload_function()
@@ -43,7 +43,7 @@ unsigned int test_overload_function(unsigned int=kTheAnswer)
 }
 struct FromOverloadedFunction:
     mess::Call<static_cast<int(*)()>(test_overload_function)>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 
 template<typename T>
@@ -53,7 +53,7 @@ constexpr T test_template_function()
 }
 struct FromTemplateFunction:
     mess::Call<test_template_function<int>>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 
 struct test_static_class
@@ -73,11 +73,11 @@ struct test_static_class
 };
 struct FromStaticMemberFunction:
     mess::Call<&test_static_class::test_static_member_func>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 struct FromStaticOverloadedMemberFunction:
     mess::Call<static_cast<int(*)()>(&test_static_class::test_static_member_overloaded_func)>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 
 struct test_class
@@ -105,22 +105,22 @@ constexpr test_class test_instance()
 }
 struct TestInstance:
     mess::Call<test_instance>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 struct FromMemberFunction:
     mess::Call<&test_class::test_member_func>,
     mess::OnInstance<TestInstance>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 struct FromMemberConstFunction:
     mess::Call<&test_class::test_member_const_func>,
     mess::OnInstance<TestInstance>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 struct FromMemberOverloadedFunction:
     mess::Call<static_cast<int(test_class::*)()>(&test_class::test_member_overloaded_func)>,
     mess::OnInstance<TestInstance>,
-    mess::WithNoArgumentss
+    mess::WithNoArgument
 {};
 
 constexpr int test_one_dependency_function(int i)

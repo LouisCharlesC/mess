@@ -13,20 +13,16 @@
 
 #include <iostream>
 
-namespace { // necessary not to include these optimized functions in the binary!
-std::ostream& coutLogger()
-{
-    return std::cout;
-}
-std::ostream& cerrLogger()
-{
-    return std::cerr;
-}
+namespace { // avoids including this function in the binary!
+    std::ostream& getLogger()
+    {
+        return std::cout;
+    }
 }
 
 struct Logger:
-    mess::Call<coutLogger>, // replace with: "mess::Call<cerrLogger>," to change the logger!
-    mess::WithNoArgumentss
+    mess::Call<getLogger>,
+    mess::WithNoArgument
 {};
 
 int main(int argc, char **argv)

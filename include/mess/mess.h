@@ -51,7 +51,7 @@ namespace mess
 
 	template<typename... Is>
 	struct WithArguments {};
-	using WithNoArgumentss = WithArguments<>;
+	using WithNoArgument = WithArguments<>;
 
 	template<typename> [[nodiscard]] constexpr decltype(auto) pull();
 
