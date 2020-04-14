@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 }
 ```
 
-# What is *mess* ?
+# Why *mess* ?
 ## What *mess* saves you
 All messaging frameworks I know have a runtime cost:
 * Memory cost: to store callable objects (function pointers, std::function instances, etc.) used to store the subscription callbacks.
