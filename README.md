@@ -14,7 +14,7 @@ Tons of such frameworks exist, but *mess* is 100% non-intrusive and optimized aw
 As an example, here is how to tell *mess* that a value called `FilteredValue` exists, and that it can be computed by calling the member function `filter` from a value called `LowPassFilter` with as its sole argument the value called `GoodLowPassParameter` (something like `FilteredValue = LowPassFilter.filter(GoodLowPassParameter);`):
 ```c++
 struct FilteredValue:
-    mess::IsTheResultOfCalling<filter>,
+    mess::IsTheResultOfCalling<&IFilter::filter>,
     mess::OnInstance<LowPassFilter>,
     mess::WithArgument<GoodLowPassParameter>
 {};
