@@ -14,9 +14,9 @@ Tons of such frameworks exist, but *mess* is 100% non-intrusive and optimized aw
 As an example, here is how to tell *mess* that a value called `FilteredValue` exists, and that it can be computed by calling the member function `filter` from a value called `LowPassFilter` with as its sole argument the value called `GoodLowPassParameter` (something like `FilteredValue = LowPassFilter.filter(GoodLowPassParameter);`):
 ```c++
 struct FilteredValue:
-    mess::Call<filter>,
+    mess::IsTheResultOfCalling<filter>,
     mess::OnInstance<LowPassFilter>,
-    mess::WithArgs<GoodLowPassParameter>
+    mess::WithArgument<GoodLowPassParameter>
 {};
 ```
 You can get `FilteredValue` by calling `mess::pull<FilteredValue>()`. The function is called `pull` because you explicitly ask for the value to be produced and *mess* will compute any other value it needs to do so. If the dependencies cannot be resolved or the types don't fit, your program won't compile. *mess* does not allow `push`ing values (i.e. producing every value that depends on the `push`ed one). I'm not sure if it's possible, or desirable.
