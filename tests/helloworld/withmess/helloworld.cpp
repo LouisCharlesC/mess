@@ -15,21 +15,14 @@
 
 static const char* kHelloWorld = "Hello, world!\n";
 
-struct StdCout:
-    mess::Is<&std::cout>
-{};
-struct HelloWorld:
-    mess::Is<&kHelloWorld>
-{};
 struct PrintHelloWorld:
-    // Sorry for the line below, but using an operator from the std namespace proves the non-intrusiveness of mess!
-    // And demonstrates a current limitation of mess: you must manually resolve overloads and provide template arguments.
-    // So, here's a static cast to a function pointer to the overload-resolved, template-provided std::operator<<().
-    mess::IsTheResultOfCalling<static_cast<std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*)>(std::operator<<<std::char_traits<char>>)>, 
-    mess::WithArguments<StdCout, HelloWorld>
+	mess::IsTheResultOfCalling<static_cast<std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*)>(std::operator<<<std::char_traits<char>>)>, 
+	mess::WithArguments<
+		mess::IsPointedToBy<&std::cout>,
+		mess::IsPointedToBy<&kHelloWorld>>
 {};
 
 int main()
 {
-     mess::pull<PrintHelloWorld>();
+	 mess::pull<PrintHelloWorld>();
 }

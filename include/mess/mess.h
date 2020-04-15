@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <tuple>
 #include <type_traits>
 
 namespace mess
@@ -20,6 +21,7 @@ namespace mess
 		struct MemberFunction {};
 		struct NonMemberFunction {};
 		struct Value {};
+		struct Pointer {};
 	} // namespace impl
 
 	template <auto>
@@ -56,11 +58,17 @@ namespace mess
 	template<typename Arg>
 	using WithArgument = WithArguments<Arg>;
 
-	template<auto P>
-	struct Is: WithNoArgument
+	template<auto V>
+	struct IsTheConstant: WithNoArgument
+	{
+		static constexpr auto value = V;
+		using Nature = ::mess::impl::Value;
+	};
+	template<auto P, bool=std::is_void_v<std::enable_if_t<std::is_pointer_v<decltype(P)>>>>
+	struct IsPointedToBy: WithNoArgument
 	{
 		static constexpr auto pointer = P;
-		using Nature = ::mess::impl::Value;
+		using Nature = ::mess::impl::Pointer;
 	};
 
 	template<typename> constexpr decltype(auto) pull();
@@ -80,7 +88,11 @@ namespace mess
 		}
 		static constexpr decltype(auto) nature(::mess::impl::Value, typename O::template WithArguments<>)
 		{
-			return *O::Is::pointer;
+			return O::IsTheConstant::value;
+		}
+		static constexpr decltype(auto) nature(::mess::impl::Pointer, typename O::template WithArguments<>)
+		{
+			return *O::IsPointedToBy::pointer;
 		}
 	};
 
@@ -88,5 +100,13 @@ namespace mess
 	constexpr decltype(auto) pull()
 	{
 		return ::mess::Impl<O>::nature(typename O::Nature(), typename O::WithArguments());
+	}
+	template<typename O1, typename O2, typename... Os>
+	constexpr decltype(auto) pull()
+	{
+		return std::make_tuple(
+			::mess::Impl<O1>::nature(typename O1::Nature(), typename O1::WithArguments()),
+			::mess::Impl<O2>::nature(typename O2::Nature(), typename O2::WithArguments()),
+			::mess::Impl<Os>::nature(typename Os::Nature(), typename Os::WithArguments())...);
 	}
 } // namespace mess

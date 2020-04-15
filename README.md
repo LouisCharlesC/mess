@@ -14,9 +14,9 @@ Tons of such frameworks exist, but *mess* is 100% non-intrusive and optimized aw
 As an example, here is how to tell *mess* that a value called `FilteredValue` exists, and that it can be computed by calling the member function `filter` from a value called `LowPassFilter` with as its sole argument the value called `GoodLowPassParameter` (something like `FilteredValue = LowPassFilter.filter(GoodLowPassParameter);`):
 ```c++
 struct FilteredValue:
-    mess::IsTheResultOfCalling<filter>,
-    mess::OnInstance<LowPassFilter>,
-    mess::WithArgument<GoodLowPassParameter>
+	mess::IsTheResultOfCalling<filter>,
+	mess::OnInstance<LowPassFilter>,
+	mess::WithArgument<GoodLowPassParameter>
 {};
 ```
 You can get `FilteredValue` by calling `mess::pull<FilteredValue>()`. The function is called `pull` because you explicitly ask for the value to be produced and *mess* will compute any other value it needs to do so. If the dependencies cannot be resolved or the types don't fit, your program won't compile. *mess* does not allow `push`ing values (i.e. producing every value that depends on the `push`ed one). I'm not sure if it's possible, or desirable.
@@ -36,8 +36,10 @@ It is foreseen that future versions might include:
 1. Multi-theading.
 
 # Hello world
-Here is *mess*'s "Hello, world!". You should know that with optimizations enabled, this code compiles to the exact same executable as a plain C++ "Hello, world!" (shown below). This is verified in the tests.
-
+Here is *mess*'s "Hello, world!". You should know that with optimizations enabled, this code compiles to the exact same executable as a plain C++ "Hello, world!" (shown below). This is verified in the tests.  
+I do apologize for the for the line 200-character line of code, but using an operator from the `std` namespace proves the non-intrusiveness of *mess*!
+And it demonstrates a current limitation of *mess*: you must manually resolve overloads and provide template arguments.
+So, there it is: a static cast to a function pointer to the overload-resolved, template-provided std::operator<<().
 ```c++
 #include <mess/mess.h>
 
@@ -45,23 +47,16 @@ Here is *mess*'s "Hello, world!". You should know that with optimizations enable
 
 static const char* kHelloWorld = "Hello, world!\n";
 
-struct StdCout:
-    mess::Is<&std::cout>
-{};
-struct HelloWorld:
-    mess::Is<&kHelloWorld>
-{};
 struct PrintHelloWorld:
-    // Sorry for the line below, but using an operator from the std namespace proves the non-intrusiveness of mess!
-    // And demonstrates a current limitation of mess: you must manually resolve overloads and provide template arguments.
-    // So, here's a static cast of the template-argument-provided std::operator<<() to an overload-resolved function pointer.
-    mess::IsTheResultOfCalling<static_cast<std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*)>(std::operator<<<std::char_traits<char>>)>, 
-    mess::WithArguments<StdCout, HelloWorld>
+	mess::IsTheResultOfCalling<static_cast<std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*)>(std::operator<<<std::char_traits<char>>)>, 
+	mess::WithArguments<
+		mess::IsPointedToBy<&std::cout>,
+		mess::IsPointedToBy<&kHelloWorld>>
 {};
 
 int main()
 {
-     mess::pull<PrintHelloWorld>();
+	 mess::pull<PrintHelloWorld>();
 }
 ```
 Here is the plain "Hello, world!" the above example compiles equal to:
