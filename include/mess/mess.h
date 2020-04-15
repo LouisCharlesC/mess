@@ -67,7 +67,7 @@ namespace mess
 	template<auto P>
 	struct IsPointedToBy: WithNoArgument
 	{
-		static_assert(!std::is_void_v<decltype(*P)>, "Template argument must be a allow dereferencing (e.i. *P is well formed).");
+		static_assert(!std::is_void<decltype(*P)>::value, "Template argument must be a allow dereferencing (e.i. *P is well formed).");
 		static constexpr auto pointer = P;
 		using Nature = ::mess::impl::Pointer;
 	};
