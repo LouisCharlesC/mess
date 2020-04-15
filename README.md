@@ -5,7 +5,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/3550cw0y96igwlye/branch/master?svg=true)](https://ci.appveyor.com/project/LouisCharlesC/mess/branch/master)
 
 # *mess*
-*mess* is a compile-time, header-only C++17 library for dataflow programing (a.k.a. message passing, event driven, actors, reactors, publisher-subscriber, signal-slot, observer pattern, etc.).  
+*mess* is a compile-time, header-only C++17 library for dataflow programing (a.k.a. message passing, event-driven, actors, reactors, publisher-subscriber, signal-slot, observer pattern, etc.).  
 Tons of such frameworks exist, but *mess* is 100% non-intrusive and optimized away by the compiler (see section [Hello world](#Hello-world) for a demo).
 
 ## Briefly
@@ -37,8 +37,7 @@ It is foreseen that future versions might include:
 
 # Hello world
 Here is *mess*'s "Hello, world!". You should know that with optimizations enabled, this code compiles to the exact same executable as a plain C++ "Hello, world!" (shown below). This is verified in the tests.  
-I do apologize for the for the line 200-character line of code, but using an operator from the `std` namespace proves the non-intrusiveness of *mess*!
-And it demonstrates a current limitation of *mess*: you must manually resolve overloads and provide template arguments.
+I do apologize for the 200-character line of code, but using an operator from the `std` namespace proves the non-intrusiveness of *mess*! And it demonstrates a current limitation of *mess*: you must manually resolve overloads and provide template arguments.  
 So, there it is: a static cast to a function pointer to the overload-resolved, template-provided std::operator<<().
 ```c++
 #include <mess/mess.h>
