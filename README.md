@@ -43,34 +43,23 @@ Here is *mess*'s "Hello, world!". You should know that with optimizations enable
 
 #include <iostream>
 
-namespace {
-    std::ostream& getCout()
-    {
-        return std::cout;
-    }
-    const char* getHelloWorld()
-    {
-        return "Hello, world!\n";
-    }
-}
+static const char* kHelloWorld = "Hello, world!\n";
 
 struct StdCout:
-    mess::IsTheResultOfCalling<getCout>,
-    mess::WithNoArgument
+    mess::Is<&std::cout>
 {};
 struct HelloWorld:
-    mess::IsTheResultOfCalling<getHelloWorld>,
-    mess::WithNoArgument
+    mess::Is<&kHelloWorld>
 {};
 struct PrintHelloWorld:
     // Sorry for the line below, but using an operator from the std namespace proves the non-intrusiveness of mess!
     // And demonstrates a current limitation of mess: you must manually resolve overloads and provide template arguments.
-    // So, here's a static cast to a function pointer to the overload-resolved, template-provided std::operator<<().
+    // So, here's a static cast of the template-argument-provided std::operator<<() to an overload-resolved function pointer.
     mess::IsTheResultOfCalling<static_cast<std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*)>(std::operator<<<std::char_traits<char>>)>, 
     mess::WithArguments<StdCout, HelloWorld>
 {};
 
-int main(int argc, char **argv)
+int main()
 {
      mess::pull<PrintHelloWorld>();
 }

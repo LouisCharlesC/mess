@@ -13,24 +13,13 @@
 
 #include <iostream>
 
-namespace {
-    std::ostream& getCout()
-    {
-        return std::cout;
-    }
-    const char* getHelloWorld()
-    {
-        return "Hello, world!\n";
-    }
-}
+static const char* kHelloWorld = "Hello, world!\n";
 
 struct StdCout:
-    mess::IsTheResultOfCalling<getCout>,
-    mess::WithNoArgument
+    mess::Is<&std::cout>
 {};
 struct HelloWorld:
-    mess::IsTheResultOfCalling<getHelloWorld>,
-    mess::WithNoArgument
+    mess::Is<&kHelloWorld>
 {};
 struct PrintHelloWorld:
     // Sorry for the line below, but using an operator from the std namespace proves the non-intrusiveness of mess!
@@ -40,7 +29,7 @@ struct PrintHelloWorld:
     mess::WithArguments<StdCout, HelloWorld>
 {};
 
-int main(int argc, char **argv)
+int main()
 {
      mess::pull<PrintHelloWorld>();
 }

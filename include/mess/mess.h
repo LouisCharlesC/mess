@@ -17,11 +17,12 @@ namespace mess
 {
 	namespace impl
 	{
-		using IsMember = ::std::true_type;
-		using IsNonMember = ::std::false_type;
+		struct MemberFunction {};
+		struct NonMemberFunction {};
+		struct Value {};
 	} // namespace impl
 
-	template <auto F>
+	template <auto>
 	struct IsTheResultOfCalling {};
 	template <typename C, typename R, typename... Args, R(C::*F)(Args...)>
 	struct IsTheResultOfCalling<F>
@@ -39,14 +40,14 @@ namespace mess
 	struct IsTheResultOfCalling<F>
 	{
 		static constexpr auto Function = F;
-		using MemberOrNot = ::mess::impl::IsNonMember;
+		using Nature = ::mess::impl::NonMemberFunction;
 	};
 
 	template<typename I>
 	struct OnInstance
 	{
 		using Instance = I;
-		using MemberOrNot = ::mess::impl::IsMember;
+		using Nature = ::mess::impl::MemberFunction;
 	};
 
 	template<typename... Args>
@@ -55,26 +56,43 @@ namespace mess
 	template<typename Arg>
 	using WithArgument = WithArguments<Arg>;
 
-	template<typename> [[nodiscard]] constexpr decltype(auto) pull();
+	template<auto P>
+	struct Is: WithNoArgument
+	{
+		static constexpr auto pointer = P;
+		using Nature = ::mess::impl::Value;
+	};
+	// template<auto V>
+	// struct Is: WithNoArgument
+	// {
+	// 	static constexpr auto value = V;
+	// 	using Nature = ::mess::impl::Value;
+	// };
+
+	template<typename> constexpr decltype(auto) pull();
 
 	template<typename O>
 	struct Impl
 	{
 		template<typename... Is>
-		static constexpr decltype(auto) memberOrNot(::mess::impl::IsNonMember, typename O::template WithArguments<Is...>)
+		static constexpr decltype(auto) nature(::mess::impl::NonMemberFunction, typename O::template WithArguments<Is...>)
 		{
 			return O::IsTheResultOfCalling::Function(::mess::pull<Is>()...);
 		}
 		template<typename... Is>
-		static constexpr decltype(auto) memberOrNot(::mess::impl::IsMember, typename O::template WithArguments<Is...>)
+		static constexpr decltype(auto) nature(::mess::impl::MemberFunction, typename O::template WithArguments<Is...>)
 		{
 			return (pull<typename O::OnInstance::Instance>().*O::IsTheResultOfCalling::Function)(pull<Is>()...);
+		}
+		static constexpr decltype(auto) nature(::mess::impl::Value, typename O::template WithArguments<>)
+		{
+			return *O::Is::pointer;
 		}
 	};
 
 	template<typename O>
-	[[nodiscard]] constexpr decltype(auto) pull()
+	constexpr decltype(auto) pull()
 	{
-		return ::mess::Impl<O>::memberOrNot(typename O::MemberOrNot(), typename O::WithArguments());
+		return ::mess::Impl<O>::nature(typename O::Nature(), typename O::WithArguments());
 	}
 } // namespace mess
