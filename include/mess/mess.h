@@ -62,12 +62,6 @@ namespace mess
 		static constexpr auto pointer = P;
 		using Nature = ::mess::impl::Value;
 	};
-	// template<auto V>
-	// struct Is: WithNoArgument
-	// {
-	// 	static constexpr auto value = V;
-	// 	using Nature = ::mess::impl::Value;
-	// };
 
 	template<typename> constexpr decltype(auto) pull();
 
