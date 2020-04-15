@@ -64,9 +64,10 @@ namespace mess
 		static constexpr auto value = V;
 		using Nature = ::mess::impl::Value;
 	};
-	template<auto P, bool=std::is_void_v<std::enable_if_t<std::is_pointer_v<decltype(P)>>>>
+	template<auto P>
 	struct IsPointedToBy: WithNoArgument
 	{
+		static_assert(std::is_pointer_v<decltype(P)>, "Template argument must be a pointer.");
 		static constexpr auto pointer = P;
 		using Nature = ::mess::impl::Pointer;
 	};
