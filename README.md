@@ -14,26 +14,25 @@ Tons of such frameworks exist, but *mess* is 100% non-intrusive and optimized aw
 As an example, here is how to tell *mess* that a value called `FilteredValue` exists, and that it can be computed by calling the member function `filter` from a value called `LowPassFilter` with as its sole argument the value called `GoodLowPassParameter` (something like `FilteredValue = LowPassFilter.filter(GoodLowPassParameter);`):
 ```c++
 struct FilteredValue:
-	mess::IsTheResultOfCalling<filter>,
-	mess::OnInstance<LowPassFilter>,
-	mess::WithArgument<GoodLowPassParameter>
+    mess::IsTheResultOfCalling<&IFilter::filter>,
+    mess::OnInstance<LowPassFilter>,
+    mess::WithArgument<GoodLowPassParameter>
 {};
 ```
 You can get `FilteredValue` by calling `mess::pull<FilteredValue>()`. The function is called `pull` because you explicitly ask for the value to be produced and *mess* will compute any other value it needs to do so. If the dependencies cannot be resolved or the types don't fit, your program won't compile. *mess* does not allow `push`ing values (i.e. producing every value that depends on the `push`ed one). I'm not sure if it's possible, or desirable.
 
 # WIP
 *mess* is currently under development. This version is out there for me to gather feedback about the terminology, usage and useful features. I am working on version 1.0, which as a bare minimum will:
-1. Allow pulling several values with a single function call.
 1. Compute dependencies only once, even if they are needed by more than one of the pulled values.
 1. Order the calls so that computed dependencies can be moved if possible, without risking use-after-move or any other bad surprises.
 
-It is foreseen that future versions might include:
+It is foreseen that future versions might:
 1. Provide nice compilation errors rather than the typical template instantiation error messages.
 1. Allow pushing values, if possible.
 1. Transparently save intermediate values inside *mess* to share the computations between several calls.
-1. Allowing calls to overload sets (non-resolved overload) and function templates.
-1. Concurrency (through coroutines?).
-1. Multi-theading.
+1. Allow calls to overload sets (non-resolved overload) and function templates.
+1. Facilitate concurrency (through coroutines?).
+1. Facilitate multi-theading.
 
 # Hello world
 Here is *mess*'s "Hello, world!". You should know that with optimizations enabled, this code compiles to the exact same executable as a plain C++ "Hello, world!" (shown below). This is verified in the tests.  
