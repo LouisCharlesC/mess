@@ -13,7 +13,10 @@
 
 #include <doctest/doctest.h>
 
-static constexpr int kTheAnswer = 42;
+static const int kTheAnswer = 42;
+struct FromPointer:
+    mess::Is<&kTheAnswer>
+{};
 
 constexpr int test_function()
 {
@@ -157,6 +160,7 @@ TEST_CASE_TEMPLATE_DEFINE("constexpr mess::pull", T, ConstexprPullTestId)
 }
 
 using TestCases = std::tuple<
+    FromPointer,
     FromFunction, FromStaticFunction, FromOverloadedFunction, FromTemplateFunction,
     FromStaticMemberFunction, FromStaticOverloadedMemberFunction,
     FromMemberFunction, FromMemberConstFunction, FromMemberOverloadedFunction,
