@@ -18,7 +18,7 @@ struct FromConstant:
 	mess::IsTheConstant<kTheAnswer>
 {};
 struct FromPointer:
-	mess::IsPointedToBy<&kTheAnswer>
+	mess::IsPulledFrom<&kTheAnswer>
 {};
 
 constexpr int test_function()
@@ -26,7 +26,7 @@ constexpr int test_function()
 	return kTheAnswer;
 }
 struct FromFunction:
-	mess::IsTheResultOfCalling<test_function>,
+	mess::IsPulledFrom<test_function>,
 	mess::WithNoArgument
 {};
 
@@ -35,7 +35,7 @@ constexpr static int test_static_function()
 	return kTheAnswer;
 }
 struct FromStaticFunction:
-	mess::IsTheResultOfCalling<test_static_function>,
+	mess::IsPulledFrom<test_static_function>,
 	mess::WithNoArgument
 {};
 
@@ -48,7 +48,7 @@ unsigned int test_overload_function(unsigned int=kTheAnswer)
 	return kTheAnswer;
 }
 struct FromOverloadedFunction:
-	mess::IsTheResultOfCalling<static_cast<int(*)()>(test_overload_function)>,
+	mess::IsPulledFrom<static_cast<int(*)()>(test_overload_function)>,
 	mess::WithNoArgument
 {};
 
@@ -58,7 +58,7 @@ constexpr T test_template_function()
 	return kTheAnswer;
 }
 struct FromTemplateFunction:
-	mess::IsTheResultOfCalling<test_template_function<int>>,
+	mess::IsPulledFrom<test_template_function<int>>,
 	mess::WithNoArgument
 {};
 
@@ -78,11 +78,11 @@ struct test_static_class
 	}
 };
 struct FromStaticMemberFunction:
-	mess::IsTheResultOfCalling<&test_static_class::test_static_member_func>,
+	mess::IsPulledFrom<&test_static_class::test_static_member_func>,
 	mess::WithNoArgument
 {};
 struct FromStaticOverloadedMemberFunction:
-	mess::IsTheResultOfCalling<static_cast<int(*)()>(&test_static_class::test_static_member_overloaded_func)>,
+	mess::IsPulledFrom<static_cast<int(*)()>(&test_static_class::test_static_member_overloaded_func)>,
 	mess::WithNoArgument
 {};
 
@@ -110,21 +110,21 @@ constexpr test_class test_instance()
 	return test_class();
 }
 struct TestInstance:
-	mess::IsTheResultOfCalling<test_instance>,
+	mess::IsPulledFrom<test_instance>,
 	mess::WithNoArgument
 {};
 struct FromMemberFunction:
-	mess::IsTheResultOfCalling<&test_class::test_member_func>,
+	mess::IsPulledFrom<&test_class::test_member_func>,
 	mess::OnInstance<TestInstance>,
 	mess::WithNoArgument
 {};
 struct FromMemberConstFunction:
-	mess::IsTheResultOfCalling<&test_class::test_member_const_func>,
+	mess::IsPulledFrom<&test_class::test_member_const_func>,
 	mess::OnInstance<TestInstance>,
 	mess::WithNoArgument
 {};
 struct FromMemberOverloadedFunction:
-	mess::IsTheResultOfCalling<static_cast<int(test_class::*)()>(&test_class::test_member_overloaded_func)>,
+	mess::IsPulledFrom<static_cast<int(test_class::*)()>(&test_class::test_member_overloaded_func)>,
 	mess::OnInstance<TestInstance>,
 	mess::WithNoArgument
 {};
@@ -134,11 +134,11 @@ constexpr int test_one_dependency_function(int i)
 	return i;
 }
 struct FromOneDependency:
-	mess::IsTheResultOfCalling<test_one_dependency_function>,
+	mess::IsPulledFrom<test_one_dependency_function>,
 	mess::WithArgument<FromTemplateFunction>
 {};
 struct FromConstantDependency:
-	mess::IsTheResultOfCalling<test_one_dependency_function>,
+	mess::IsPulledFrom<test_one_dependency_function>,
 	mess::WithArgument<mess::IsTheConstant<kTheAnswer>>
 {};
 
@@ -147,11 +147,11 @@ constexpr int test_two_dependency_function(int i, int j)
 	return (i+j)/2;
 }
 struct FromTwoDependency:
-	mess::IsTheResultOfCalling<test_two_dependency_function>,
+	mess::IsPulledFrom<test_two_dependency_function>,
 	mess::WithArguments<FromStaticOverloadedMemberFunction, FromMemberConstFunction>
 {};
 struct FromMultiLevelDependency:
-	mess::IsTheResultOfCalling<test_two_dependency_function>,
+	mess::IsPulledFrom<test_two_dependency_function>,
 	mess::WithArguments<FromConstant, FromTwoDependency>
 {};
 

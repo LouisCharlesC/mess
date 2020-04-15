@@ -20,26 +20,37 @@ namespace mess
 	{
 		struct MemberFunction {};
 		struct NonMemberFunction {};
-		struct Value {};
 		struct Pointer {};
+		struct Constant {};
 	} // namespace impl
 
-	template <auto>
-	struct IsTheResultOfCalling {};
+	template<typename... Args>
+	struct WithArguments {};
+	using WithNoArgument = WithArguments<>;
+	template<typename Arg>
+	using WithArgument = WithArguments<Arg>;
+
+	template<auto P>
+	struct IsPulledFrom: WithNoArgument
+	{
+		// static_assert(!std::is_void<decltype(*P)>::value, "Template argument must be a allow dereferencing (e.i. *P is well formed).");
+		static constexpr auto pointer = P;
+		using Nature = ::mess::impl::Pointer;
+	};
 	template <typename C, typename R, typename... Args, R(C::*F)(Args...)>
-	struct IsTheResultOfCalling<F>
+	struct IsPulledFrom<F>
 	{
 		static constexpr auto Function = F;
 		using Class = C;
 	};
 	template <typename C, typename R, typename... Args, R(C::*F)(Args...) const>
-	struct IsTheResultOfCalling<F>
+	struct IsPulledFrom<F>
 	{
 		static constexpr auto Function = F;
 		using Class = C;
 	};
 	template <typename R, typename... Args, R(*F)(Args...)>
-	struct IsTheResultOfCalling<F>
+	struct IsPulledFrom<F>
 	{
 		static constexpr auto Function = F;
 		using Nature = ::mess::impl::NonMemberFunction;
@@ -52,25 +63,15 @@ namespace mess
 		using Nature = ::mess::impl::MemberFunction;
 	};
 
-	template<typename... Args>
-	struct WithArguments {};
-	using WithNoArgument = WithArguments<>;
-	template<typename Arg>
-	using WithArgument = WithArguments<Arg>;
-
-	template<auto V>
+	template<auto C>
 	struct IsTheConstant: WithNoArgument
 	{
-		static constexpr auto value = V;
-		using Nature = ::mess::impl::Value;
+		static constexpr auto constant = C;
+		using Nature = ::mess::impl::Constant;
 	};
-	template<auto P>
-	struct IsPointedToBy: WithNoArgument
-	{
-		static_assert(!std::is_void<decltype(*P)>::value, "Template argument must be a allow dereferencing (e.i. *P is well formed).");
-		static constexpr auto pointer = P;
-		using Nature = ::mess::impl::Pointer;
-	};
+
+	template<typename... Vs>
+	struct PushesTo {};
 
 	template<typename> constexpr decltype(auto) pull();
 
@@ -80,20 +81,20 @@ namespace mess
 		template<typename... Is>
 		static constexpr decltype(auto) nature(::mess::impl::NonMemberFunction, typename O::template WithArguments<Is...>)
 		{
-			return O::IsTheResultOfCalling::Function(::mess::pull<Is>()...);
+			return O::IsPulledFrom::Function(::mess::pull<Is>()...);
 		}
 		template<typename... Is>
 		static constexpr decltype(auto) nature(::mess::impl::MemberFunction, typename O::template WithArguments<Is...>)
 		{
-			return (pull<typename O::OnInstance::Instance>().*O::IsTheResultOfCalling::Function)(pull<Is>()...);
+			return (pull<typename O::OnInstance::Instance>().*O::IsPulledFrom::Function)(pull<Is>()...);
 		}
-		static constexpr decltype(auto) nature(::mess::impl::Value, typename O::template WithArguments<>)
+		static constexpr decltype(auto) nature(::mess::impl::Constant, typename O::template WithArguments<>)
 		{
-			return O::IsTheConstant::value;
+			return O::IsTheConstant::constant;
 		}
 		static constexpr decltype(auto) nature(::mess::impl::Pointer, typename O::template WithArguments<>)
 		{
-			return *O::IsPointedToBy::pointer;
+			return *O::IsPulledFrom::pointer;
 		}
 	};
 

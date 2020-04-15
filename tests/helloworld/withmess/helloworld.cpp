@@ -15,11 +15,14 @@
 
 static const char* kHelloWorld = "Hello, world!\n";
 
+using PrintFnPtr = std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*);
+static constexpr PrintFnPtr print = std::operator<< <std::char_traits<char> >;
+
 struct PrintHelloWorld:
-	mess::IsTheResultOfCalling<static_cast<std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*)>(std::operator<<<std::char_traits<char>>)>, 
+	mess::IsPulledFrom<print>, 
 	mess::WithArguments<
-		mess::IsPointedToBy<&std::cout>,
-		mess::IsPointedToBy<&kHelloWorld>>
+		mess::IsPulledFrom<&std::cout>,
+		mess::IsPulledFrom<&kHelloWorld>>
 {};
 
 int main()

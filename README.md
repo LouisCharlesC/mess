@@ -14,7 +14,7 @@ Tons of such frameworks exist, but *mess* is 100% non-intrusive and optimized aw
 As an example, here is how to tell *mess* that a value called `FilteredValue` exists, and that it can be computed by calling the member function `filter` from a value called `LowPassFilter` with as its sole argument the value called `GoodLowPassParameter` (something like `FilteredValue = LowPassFilter.filter(GoodLowPassParameter);`):
 ```c++
 struct FilteredValue:
-    mess::IsTheResultOfCalling<&IFilter::filter>,
+    mess::IsPulledFrom<&IFilter::filter>,
     mess::OnInstance<LowPassFilter>,
     mess::WithArgument<GoodLowPassParameter>
 {};
@@ -25,19 +25,19 @@ You can get `FilteredValue` by calling `mess::pull<FilteredValue>()`. The functi
 *mess* is currently under development. This version is out there for me to gather feedback about the terminology, usage and useful features. I am working on version 1.0, which as a bare minimum will:
 1. Compute dependencies only once, even if they are needed by more than one of the pulled values.
 1. Order the calls so that computed dependencies can be moved if possible, without risking use-after-move or any other bad surprises.
+1. Split the calls into independent stages that you can choose to parallelize using your favorite library.
 
 It is foreseen that future versions might:
-1. Provide nice compilation errors rather than the typical template instantiation error messages.
-1. Allow pushing values, if possible.
+1. Facilitate concurrency (coroutines?).
 1. Transparently save intermediate values inside *mess* to share the computations between several calls.
+1. Allow pushing values, if possible.
 1. Allow calls to overload sets (non-resolved overload) and function templates.
-1. Facilitate concurrency (through coroutines?).
-1. Facilitate multi-theading.
+1. Provide nice compilation errors rather than the typical template instantiation error messages.
 
 # Hello world
 Here is *mess*'s "Hello, world!". You should know that with optimizations enabled, this code compiles to the exact same executable as a plain C++ "Hello, world!" (shown below). This is verified in the tests.  
-I do apologize for the 200-character line of code, but using an operator from the `std` namespace proves the non-intrusiveness of *mess*! And it demonstrates a current limitation of *mess*: you must manually resolve overloads and provide template arguments.  
-So, there it is: a static cast to a function pointer to the overload-resolved, template-provided std::operator<<().
+I do apologize function pointer casting, but I think that using an operator from the `std` namespace showcases the non-intrusiveness of *mess*! And it also demonstrates a limitation: you must manually resolve overloads and provide template arguments.  
+So, there it is: the overload-resolved function pointer to the template-arguments-provided std::operator<<().
 ```c++
 #include <mess/mess.h>
 
@@ -45,11 +45,14 @@ So, there it is: a static cast to a function pointer to the overload-resolved, t
 
 static const char* kHelloWorld = "Hello, world!\n";
 
+using PrintFnPtr = std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*);
+static constexpr PrintFnPtr print = std::operator<< <std::char_traits<char> >;
+
 struct PrintHelloWorld:
-	mess::IsTheResultOfCalling<static_cast<std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*)>(std::operator<<<std::char_traits<char>>)>, 
+	mess::IsPulledFrom<print>, 
 	mess::WithArguments<
-		mess::IsPointedToBy<&std::cout>,
-		mess::IsPointedToBy<&kHelloWorld>>
+		mess::IsPulledFrom<&std::cout>,
+		mess::IsPulledFrom<&kHelloWorld>>
 {};
 
 int main()
