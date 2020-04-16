@@ -155,27 +155,27 @@ struct FromMultiLevelDependency:
 	mess::WithArguments<FromConstant, FromTwoDependency>
 {};
 
-TEST_CASE_TEMPLATE_DEFINE("mess::pull a single value", T, PullTestId)
+TEST_CASE_TEMPLATE_DEFINE("::mess::pull a single value", T, PullTestId)
 {
-	const auto value = mess::pull<T>();
+	const auto value = ::mess::pull<T>();
 	CHECK_EQ(value, kTheAnswer);
 }
-TEST_CASE_TEMPLATE_DEFINE("constexpr mess::pull a single value", T, ConstexprPullTestId)
+TEST_CASE_TEMPLATE_DEFINE("constexpr ::mess::pull a single value", T, ConstexprPullTestId)
 {
-	constexpr auto value = mess::pull<T>();
+	constexpr auto value = ::mess::pull<T>();
 	static_assert(value == kTheAnswer, "Pull from constexpr function test failed!");
 }
-TEST_CASE("mess::pull<...> multiple values")
+TEST_CASE("::mess::pull<...> multiple values")
 {
 	SUBCASE("pull 2 values")
 	{
-		const auto [value1, value2] = mess::pull<FromConstant, FromConstant>();
+		const auto [value1, value2] = ::mess::pullAsTuple<FromConstant, FromConstant>();
 		CHECK_EQ(value1, kTheAnswer);
 		CHECK_EQ(value2, kTheAnswer);
 	}
 	SUBCASE("pull 3 values")
 	{
-		const auto [value1, value2, value3] = mess::pull<FromConstant, FromConstant, FromConstant>();
+		const auto [value1, value2, value3] = ::mess::pullAsTuple<FromConstant, FromConstant, FromConstant>();
 		CHECK_EQ(value1, kTheAnswer);
 		CHECK_EQ(value2, kTheAnswer);
 		CHECK_EQ(value3, kTheAnswer);

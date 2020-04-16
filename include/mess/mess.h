@@ -12,102 +12,96 @@
 #pragma once
 
 #include <tuple>
-#include <type_traits>
 
 namespace mess
 {
-	namespace impl
+	enum class From
 	{
-		struct MemberFunction {};
-		struct NonMemberFunction {};
-		struct Pointer {};
-		struct Constant {};
-	} // namespace impl
+		Constant,
+		Pointer,
+		NonMemberFunction,
+		MemberFunction,
+	};
 
-	template<typename... Args>
-	struct WithArguments {};
+	template<typename> constexpr decltype(auto) pull();
+
+	template<typename... Inputs>
+	struct WithArguments
+	{
+		template<typename O>
+		static constexpr decltype(auto) pull()
+		{
+			if constexpr (O::IsPulledFrom::what == ::mess::From::Constant)
+			{
+				return O::IsPulledFrom::here;
+			}
+			else if constexpr (O::IsPulledFrom::what == ::mess::From::Pointer)
+			{
+				return *O::IsPulledFrom::here;
+			}
+			else if constexpr (O::IsPulledFrom::what == ::mess::From::NonMemberFunction)
+			{
+				return O::IsPulledFrom::here(Inputs::WithArguments::template pull<Inputs>()...);
+			}
+			else if constexpr (O::IsPulledFrom::what == ::mess::From::MemberFunction)
+			{
+				return (O::OnInstance::Instance::WithArguments::template pull<typename O::OnInstance::Instance>().*O::IsPulledFrom::here)(Inputs::WithArguments::template pull<Inputs>()...);
+			}
+		}
+	};
 	using WithNoArgument = WithArguments<>;
 	template<typename Arg>
 	using WithArgument = WithArguments<Arg>;
 
-	template<auto P>
+	template<auto Pointer>
 	struct IsPulledFrom: WithNoArgument
 	{
-		static constexpr auto pointer = P;
-		using Nature = ::mess::impl::Pointer;
+		static constexpr auto here = Pointer;
+		static constexpr auto what = ::mess::From::Pointer;
 	};
-	template <typename C, typename R, typename... Args, R(C::*F)(Args...)>
-	struct IsPulledFrom<F>
+	template <typename C, typename R, typename... Args, R(C::*Function)(Args...)>
+	struct IsPulledFrom<Function>
 	{
-		static constexpr auto Function = F;
-		using Class = C;
+		static constexpr auto here = Function;
+		static constexpr auto what = ::mess::From::MemberFunction;
 	};
-	template <typename C, typename R, typename... Args, R(C::*F)(Args...) const>
-	struct IsPulledFrom<F>
+	template <typename C, typename R, typename... Args, R(C::*Function)(Args...) const>
+	struct IsPulledFrom<Function>
 	{
-		static constexpr auto Function = F;
-		using Class = C;
+		static constexpr auto here = Function;
+		static constexpr auto what = ::mess::From::MemberFunction;
 	};
-	template <typename R, typename... Args, R(*F)(Args...)>
-	struct IsPulledFrom<F>
+	template <typename R, typename... Args, R(*Function)(Args...)>
+	struct IsPulledFrom<Function>
 	{
-		static constexpr auto Function = F;
-		using Nature = ::mess::impl::NonMemberFunction;
+		static constexpr auto here = Function;
+		static constexpr auto what = ::mess::From::NonMemberFunction;
 	};
 
 	template<typename I>
 	struct OnInstance
 	{
 		using Instance = I;
-		using Nature = ::mess::impl::MemberFunction;
 	};
 
-	template<auto C>
+	template<auto Constant>
 	struct IsTheConstant: WithNoArgument
 	{
-		static constexpr auto constant = C;
-		using Nature = ::mess::impl::Constant;
-	};
-
-	template<typename... Vs>
-	struct PushesTo {};
-
-	template<typename> constexpr decltype(auto) pull();
-
-	template<typename O>
-	struct Impl
-	{
-		template<typename... Is>
-		static constexpr decltype(auto) nature(::mess::impl::NonMemberFunction, typename O::template WithArguments<Is...>)
+		struct IsPulledFrom
 		{
-			return O::IsPulledFrom::Function(::mess::pull<Is>()...);
-		}
-		template<typename... Is>
-		static constexpr decltype(auto) nature(::mess::impl::MemberFunction, typename O::template WithArguments<Is...>)
-		{
-			return (pull<typename O::OnInstance::Instance>().*O::IsPulledFrom::Function)(pull<Is>()...);
-		}
-		static constexpr decltype(auto) nature(::mess::impl::Constant, typename O::template WithArguments<>)
-		{
-			return O::IsTheConstant::constant;
-		}
-		static constexpr decltype(auto) nature(::mess::impl::Pointer, typename O::template WithArguments<>)
-		{
-			return *O::IsPulledFrom::pointer;
-		}
+			static constexpr auto here = Constant;
+			static constexpr auto what = ::mess::From::Constant;
+		};
 	};
 
 	template<typename O>
 	constexpr decltype(auto) pull()
 	{
-		return ::mess::Impl<O>::nature(typename O::Nature(), typename O::WithArguments());
+		return O::WithArguments::template pull<O>();
 	}
-	template<typename O1, typename O2, typename... Os>
-	constexpr decltype(auto) pull()
+	template<typename... Os>
+	constexpr decltype(auto) pullAsTuple()
 	{
-		return std::make_tuple(
-			::mess::Impl<O1>::nature(typename O1::Nature(), typename O1::WithArguments()),
-			::mess::Impl<O2>::nature(typename O2::Nature(), typename O2::WithArguments()),
-			::mess::Impl<Os>::nature(typename Os::Nature(), typename Os::WithArguments())...);
+		return std::make_tuple(::mess::pull<Os>()...);
 	}
 } // namespace mess

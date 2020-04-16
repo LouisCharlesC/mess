@@ -22,12 +22,13 @@ set_target_properties(
 
 find_package(doctest CONFIG REQUIRED)
 
+
+set(tests_SRC test_main.cpp test_mess.cpp test_readme.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
-	add_executable(tests test_main.cpp test_mess.cpp test_helloworld.cpp)
-else()
-	add_executable(tests test_main.cpp test_mess.cpp)
+	list(APPEND tests_SRC test_helloworld.cpp)
 endif()
-target_link_libraries(tests PRIVATE doctest::doctest mess)
+add_executable(tests ${tests_SRC})
+target_link_libraries(tests doctest::doctest mess)
 target_set_warnings(tests ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 set_target_properties(
 	tests
@@ -37,4 +38,4 @@ set_target_properties(
 )
 
 include(CTest)
-add_test(NAME mess.tests COMMAND tests -s)
+add_test(NAME mess.tests COMMAND -s)
