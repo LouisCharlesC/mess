@@ -38,4 +38,4 @@ set_target_properties(
 )
 
 include(CTest)
-add_test(NAME mess.tests COMMAND -s)
+add_test(NAME mess.tests COMMAND tests -s)
