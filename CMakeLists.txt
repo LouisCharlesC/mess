@@ -16,7 +16,7 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 )
 target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 
-add_library(inclusivescanlib examples/inclusivescan/modules/source.cpp examples/inclusivescan/modules/stats.cpp)
+add_library(inclusivescanlib examples/inclusivescan/modules/source.cpp)
 target_include_directories(inclusivescanlib PUBLIC ${PROJECT_SOURCE_DIR}/examples/inclusivescan/modules)
 target_set_warnings(inclusivescanlib ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 set_target_properties(
