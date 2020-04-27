@@ -201,7 +201,7 @@ namespace mess
 	template<decltype(auto) Constant>
 	struct IsTheConstant: WithNoArgument
 	{
-		static const decltype(auto) IsHere = Constant;
+		static constexpr decltype(auto) IsHere = Constant;
 		static constexpr ::mess::From IsWhat = ::mess::From::Constant;
 	};
 
