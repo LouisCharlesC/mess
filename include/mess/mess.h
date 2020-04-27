@@ -113,7 +113,7 @@ namespace mess
 				}
 				else if constexpr (O::IsWhat == ::mess::From::MemberFunction)
 				{
-					if constexpr (std::is_pointer_v<std::remove_reference_t<decltype(O::OnInstance::Instance::WithArguments::template pull<typename O::OnInstance::Instance>(std::move(pushed)))>>)
+					if constexpr (std::is_pointer<std::remove_reference_t<decltype(O::OnInstance::Instance::WithArguments::template pull<typename O::OnInstance::Instance>(std::move(pushed)))>>::value)
 					{
 						return (O::OnInstance::Instance::WithArguments::template pull<typename O::OnInstance::Instance>(std::move(pushed))->*O::IsHere)(Inputs::WithArguments::template pull<Inputs>(std::move(pushed))...);
 					}

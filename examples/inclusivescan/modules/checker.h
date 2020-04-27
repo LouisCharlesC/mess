@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <functional>
 #include <memory>
 
 namespace ex
