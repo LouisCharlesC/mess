@@ -22,30 +22,29 @@ struct IFilter
 };
 struct Filter: IFilter
 {
-	inline bool filter(bool b) override
+	bool filter(bool b) override
 	{
 		return b;
 	}
 };
 Filter filter;
-bool param;
 
 struct LowPassFilter:
-	mess::IsPulledFrom<&filter>
+	mess::IsStoredIn<&filter>
 {};
 struct GoodLowPassParameter:
-	mess::IsPulledFrom<&param>
+	mess::IsALocalVariable
 {};
 struct FilteredValue:
-	mess::IsPulledFrom<&IFilter::filter>,
+	mess::IsTheResultOfCalling<&IFilter::filter>,
 	mess::OnInstance<LowPassFilter>,
 	mess::WithArgument<GoodLowPassParameter>
 {};
 
 TEST_CASE("readme example code")
 {
-	param = true;
-	CHECK(::mess::pull<FilteredValue>());
+	bool param = true;
+	CHECK(mess::pull<FilteredValue>(mess::push<GoodLowPassParameter>(param)));
 	param = false;
-	CHECK_FALSE(::mess::pull<FilteredValue>());
+	CHECK_FALSE(mess::pull<FilteredValue>(mess::push<GoodLowPassParameter>(param)));
 }

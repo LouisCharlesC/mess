@@ -16,16 +16,16 @@
 static const char* kHelloWorld = "Hello, world!\n";
 
 using PrintFnPtr = std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*);
-static constexpr PrintFnPtr print = std::operator<< <std::char_traits<char> >;
+static PrintFnPtr print = std::operator<< <std::char_traits<char> >;
 
 struct PrintHelloWorld:
-	mess::IsPulledFrom<print>, 
+	mess::IsTheResultOfCalling<&print>,
 	mess::WithArguments<
-		mess::IsPulledFrom<&std::cout>,
-		mess::IsPulledFrom<&kHelloWorld>>
+		mess::IsStoredIn<&std::cout>,
+		mess::IsStoredIn<&kHelloWorld>>
 {};
 
 int main()
 {
-	 mess::pull<PrintHelloWorld>();
+	mess::pull<PrintHelloWorld>();
 }

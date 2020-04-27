@@ -1,5 +1,4 @@
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
-include(Warnings)
+# set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 
 add_executable(helloworld helloworld/withmess/helloworld.cpp)
 target_link_libraries(helloworld PRIVATE mess)
@@ -22,8 +21,7 @@ set_target_properties(
 
 find_package(doctest CONFIG REQUIRED)
 
-
-set(tests_SRC test_main.cpp test_mess.cpp test_readme.cpp)
+set(tests_SRC test_main.cpp test_sources.cpp test_dependencies.cpp test_readme.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
 	list(APPEND tests_SRC test_helloworld.cpp)
 endif()
