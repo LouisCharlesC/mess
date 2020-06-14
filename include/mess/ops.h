@@ -1,6 +1,6 @@
 /**
  * @file ops.h
- * @author your name (you@domain.com)
+ * @author L.-C. C.
  * @brief 
  * @version 0.1
  * @date 2020-05-29
@@ -13,11 +13,10 @@
 
 namespace mess
 {
-	enum class PullOperation
+	enum class Operation
 	{
-		Read,
+		Get,
 		Dereference,
-		Invoke,
-		Await
+		Invoke
 	};
 } // namespace mess
