@@ -30,7 +30,7 @@ struct Filter: IFilter
 Filter filter;
 
 struct LowPassFilter:
-	mess::IsStoredIn<&filter>
+	mess::IsPointedToBy<&filter>
 {};
 struct GoodLowPassParameter:
 	mess::IsALocalVariable

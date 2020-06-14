@@ -13,7 +13,7 @@
 #include <scanner.h>
 #include <source.h>
 
-#include <mess/mess.h>
+#include "flow.h"
 
 #include <cassert>
 #include <chrono>
@@ -21,30 +21,6 @@
 #include <iostream>
 #include <iterator>
 #include <vector>
-
-struct Source:
-	mess::IsALocalVariable
-{};
-struct DataSize:
-	mess::IsALocalVariable
-{};
-struct OriginalData:
-	mess::IsTheResultOfCalling<&ex::Source::get>,
-	mess::OnInstance<Source>,
-	mess::WithArgument<DataSize>
-{};
-struct ScannedData:
-	mess::IsALocalVariable
-{};
-struct DoScan:
-	mess::IsTheResultOfALocalLambda,
-	mess::WithArguments<OriginalData, ScannedData>
-{};
-struct DoCheck:
-	mess::IsTheResultOfALocalLambda,
-	mess::WithArguments<ScannedData, OriginalData>
-		// mess::WhenAll<DoScan>
-{};
 
 int main(int, char const *[])
 {
@@ -83,7 +59,7 @@ int main(int, char const *[])
 		scanTime += std::chrono::duration<double, std::milli>(std::chrono::high_resolution_clock::now()-beforeScan)/NumberOfIterationsToRun;
 
 		// Perform dependent computations
-		check &= mess::pull<DoCheck>(mess::push<DoCheck>(doCheck), mess::push<OriginalData>(original), mess::push<ScannedData>(scanned));
+		check &= mess::pull<Check>(mess::push<Check>(doCheck), mess::push<OriginalData>(original), mess::push<ScannedData>(scanned));
 		assert(check);
 	}
 	const std::chrono::duration<double, std::milli> totalTime = (std::chrono::high_resolution_clock::now()-beforeAll) / NumberOfIterationsToRun;

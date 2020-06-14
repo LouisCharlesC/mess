@@ -13,19 +13,19 @@
 
 #include <iostream>
 
-static const char* kHelloWorld = "Hello, world!\n";
+// static const char* kHelloWorld = "Hello, world!\n";
 
-using PrintFnPtr = std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*);
-static PrintFnPtr print = std::operator<< <std::char_traits<char> >;
+// using PrintFnPtr = std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*);
+// static PrintFnPtr print = std::operator<< <std::char_traits<char> >;
 
-struct PrintHelloWorld:
-	mess::IsTheResultOfCalling<&print>,
-	mess::WithArguments<
-		mess::IsStoredIn<&std::cout>,
-		mess::IsStoredIn<&kHelloWorld>>
-{};
+// struct PrintHelloWorld:
+// 	mess::IsTheResultOfCalling<&print>,
+// 	mess::WithArguments<
+// 		mess::IsPointedToBy<&std::cout>,
+// 		mess::IsPointedToBy<&kHelloWorld>>
+// {};
 
 int main()
 {
-	mess::pull<PrintHelloWorld>();
+	// mess::pull<PrintHelloWorld>();
 }
