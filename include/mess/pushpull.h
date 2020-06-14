@@ -43,15 +43,15 @@ namespace mess
 	template<typename NameToPull, typename... PushedTypes, typename... PushedNames>
 	constexpr auto pull(Pushed<PushedTypes, PushedNames>&&... pushedValues)
 	{
-		if constexpr (NameToPull::op == PullOperation::Read)
+		if constexpr (NameToPull::op == Operation::Get)
 		{
 			return NameToPull::ValueToRead;
 		}
-		if constexpr (NameToPull::op == PullOperation::Dereference)
+		if constexpr (NameToPull::op == Operation::Dereference)
 		{
 			return *pull<typename NameToPull::NameToDereference>();
 		}
-		if constexpr (NameToPull::op == PullOperation::Invoke)
+		if constexpr (NameToPull::op == Operation::Invoke)
 		{
 			return pull<typename NameToPull::NameToInvoke>()();
 		}

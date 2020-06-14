@@ -18,7 +18,7 @@ namespace mess
 	template<auto Value>
 	struct Names
 	{
-		static constexpr PullOperation op = PullOperation::Read;
+		static constexpr Operation op = Operation::Get;
 		static constexpr auto ValueToRead = Value;
 	};
 	template<auto Value>
@@ -27,7 +27,7 @@ namespace mess
 	template<typename Name>
 	struct Invokes
 	{
-		static constexpr PullOperation op = PullOperation::Invoke;
+		static constexpr Operation op = Operation::Invoke;
 		using NameToInvoke = Name;
 	};
 
@@ -40,7 +40,7 @@ namespace mess
 	template<typename Name>
 	struct Dereferences
 	{
-		static constexpr PullOperation op = PullOperation::Dereference;
+		static constexpr Operation op = Operation::Dereference;
 		using NameToDereference = Name;
 	};
 
