@@ -19,6 +19,19 @@ set_target_properties(
 		CXX_EXTENSIONS NO
 )
 
+find_package(Threads)
+add_executable(launch test_launch.cpp)
+target_link_libraries(launch PUBLIC Threads::Threads c++)
+target_compile_options(launch PUBLIC -stdlib=libc++)
+target_set_warnings(launch ENABLE ALL AS_ERROR ALL DISABLE Annoying)
+set_target_properties(
+	launch
+	PROPERTIES
+		CXX_STANDARD 20
+		CXX_STANDARD_REQUIRED ON
+		CXX_EXTENSIONS OFF
+)
+
 find_package(doctest CONFIG REQUIRED)
 
 add_library(tests_utils utils/operationcounter.cpp)
