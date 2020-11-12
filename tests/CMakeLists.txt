@@ -1,54 +1,18 @@
-# set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
-
-# add_executable(helloworld helloworld/withmess/helloworld.cpp)
-# target_link_libraries(helloworld PRIVATE mess)
-# target_set_warnings(helloworld ENABLE ALL AS_ERROR ALL DISABLE Annoying)
-# set_target_properties(
-# 	helloworld
-# 	PROPERTIES
-# 		CXX_STANDARD 17
-# 		CXX_EXTENSIONS NO
-# )
-
-add_executable(helloworldwomess helloworld/womess/helloworld.cpp)
-target_set_warnings(helloworldwomess ENABLE ALL AS_ERROR ALL DISABLE Annoying)
-set_target_properties(
-	helloworldwomess
-	PROPERTIES
-		CXX_STANDARD 17
-		CXX_EXTENSIONS NO
-)
-
-find_package(Threads)
-add_executable(launch test_launch.cpp)
-target_link_libraries(launch PUBLIC Threads::Threads c++)
-target_compile_options(launch PUBLIC -stdlib=libc++)
-target_set_warnings(launch ENABLE ALL AS_ERROR ALL DISABLE Annoying)
-set_target_properties(
-	launch
-	PROPERTIES
-		CXX_STANDARD 20
-		CXX_STANDARD_REQUIRED ON
-		CXX_EXTENSIONS OFF
-)
-
+include(CTest)
 find_package(doctest CONFIG REQUIRED)
 
-add_library(tests_utils utils/operationcounter.cpp)
+# add_library(tests_utils utils/operationcounter.cpp)
 
-set(tests_SRC test_main.cpp test_pull.cpp test_push.cpp)# test_dependencies.cpp test_push.cpp test_readme.cpp)
-# if (CMAKE_BUILD_TYPE STREQUAL "Release")
-# 	list(APPEND tests_SRC test_helloworld.cpp)
-# endif()
+set(tests_SRC tests_main.cpp tests.cpp)
 add_executable(tests ${tests_SRC})
-target_link_libraries(tests tests_utils doctest::doctest mess)
+target_link_libraries(tests doctest::doctest mess)
 target_set_warnings(tests ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 set_target_properties(
 	tests
 	PROPERTIES
-		CXX_STANDARD 17
+		CXX_STANDARD 20
+		CXX_STANDARD_REQUIRED YES
 		CXX_EXTENSIONS NO
 )
 
-include(CTest)
 add_test(NAME mess.tests COMMAND tests -s)
