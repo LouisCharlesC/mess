@@ -23,7 +23,7 @@ namespace mess
 {
 	std::future<void> thunk(Invocable& current, std::vector<Value&> predecessors, Futures futures)
 	{
-		auto state = futures.check_and_set(current(predecessors));
+		auto state = futures.check_and_set(current(predecessors)); // execute current task, send its output, check if sending this allows any successor to be run
 
 		for (auto& successor: successors_for(current))
 		{
@@ -46,7 +46,13 @@ namespace mess
 
 		for (auto& scope: scopes)
 		{
-			scope.wait();
+			scope.wait(); // this is bad, this also must be continued by the last child process
 		}
+	}
+
+	template<typename... Pulled>
+	auto pull()
+	{
+
 	}
 }
