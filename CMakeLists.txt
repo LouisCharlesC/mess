@@ -7,11 +7,28 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 include(Warnings)
 
-add_library(${PROJECT_NAME} INTERFACE)
-target_include_directories(${PROJECT_NAME} INTERFACE
-	$<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
-	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
-target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
+find_package(Threads REQUIRED)
 
-add_subdirectory(tests)
+add_library(${PROJECT_NAME} src/mess.cpp)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
+target_set_warnings(${PROJECT_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
+set_target_properties(
+	${PROJECT_NAME}
+	PROPERTIES
+		CXX_STANDARD 20
+		CXX_STANDARD_REQUIRED YES
+		CXX_EXTENSIONS NO
+)
+
+add_executable(main src/main.cpp)
+target_link_libraries(main PUBLIC ${PROJECT_NAME})
+target_set_warnings(main ENABLE ALL AS_ERROR ALL DISABLE Annoying)
+set_target_properties(
+	main
+	PROPERTIES
+		CXX_STANDARD 20
+		CXX_STANDARD_REQUIRED YES
+		CXX_EXTENSIONS NO
+)
+
+# add_subdirectory(tests)
