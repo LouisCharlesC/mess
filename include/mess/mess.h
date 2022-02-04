@@ -1,136 +1,112 @@
 /**
  * @file mess.h
  * @author your name (you@domain.com)
- * @brief 
+ * @brief
  * @version 0.1
  * @date 2021-12-02
- * 
+ *
  * @copyright Copyright (c) 2021
- * 
+ *
  */
 
 #include <atomic>
 #include <cstdint>
 #include <functional>
-#include <optional>
+#include <memory>
+#include <utility>
 #include <thread>
 #include <vector>
 
-namespace mess {
-    
-struct scope;
-
-struct runtime
+namespace mess
 {
-    struct countdown
+    struct entry
     {
-        signaler() = default;
-        signaler(std::size_t numberOfPendingPredecessors, std::size_t taskIndex);
-        signaler(const signaler& other);
-
-        void signal(runtime& rt, scope& sc);
-
-        std::atomic<std::size_t> numberOfPendingPredecessors;
-        std::size_t taskIndex;
+        std::function<int(int, int)> invocable;
+        std::vector<int> predecessors_index;
+        int count_down_latch;
+        std::vector<int> successors_index;
     };
 
-    struct resource
+    struct frame
     {
-        std::optional<int> storage;
-        std::array<signaler*, 2> signalers;
+        std::vector<mess::entry> descriptor;
+        std::vector<int> results;
     };
 
-    static resource make_resource(signaler& first, signaler& second);
-
-    static signaler make_signaler(std::size_t numberOfPredecessors, std::size_t index);
-
-    template<typename F>
-    static void execute(F&& f)
+    inline void execute(frame &frame, std::size_t index);
+    inline void run(frame &frame, std::size_t index)
     {
-        std::thread(std::forward<F>(f)).detach();
+        int lhs = 1;
+        int rhs = 1;
+        if (frame.descriptor[index].predecessors_index.size() > 0)
+        {
+            lhs = frame.results[frame.descriptor[index].predecessors_index[0]];
+
+            if (frame.descriptor[index].predecessors_index.size() > 1)
+            {
+                rhs = frame.results[frame.descriptor[index].predecessors_index[1]];
+            }
+        }
+
+        if (!frame.descriptor[index].successors_index.empty())
+        {
+            frame.results[index] = frame.descriptor[index].invocable(lhs, rhs);
+
+            const auto successors = frame.descriptor[index].successors_index;
+            for (const int successor : successors)
+            {
+                if (--frame.descriptor[successor].count_down_latch == 0)
+                {
+                    execute(frame, successor);
+                }
+            }
+        }
+        else
+        {
+            frame.descriptor[index].invocable(lhs, rhs);
+        }
     }
-};
 
-inline int task(int l, int r)
-{
-    std::this_thread::sleep_for(std::chrono::milliseconds((l+r)*100)); return l+r;
-}
-
-struct scope
-{
-
-    runtime rt;
-    std::vector<task> tasks{5};
-
-    std::vector<runtime::signaler> signalers;
-    std::vector<runtime::resource> ressources;
-
-    void find_inputs_and_run(std::size_t index);
-    void run(std::size_t index, const int& l, const int& r);
-
-    int operator()(int l0, int r0, int l1, int r1);
-};
-
-inline void simple_invoker(std::size_t index, const int& l, const int& r)
-{
-    std::cout << "Starting task #" << index << "." << std::endl;
-    const int result = task(l, r);
-    std::cout << "Finished task #" << index << "." << std::endl;
-
-    execute_successors(index, result, 0);
-}
-
-inline void execute_successors(std::size_t index, const int& l, const int& r)
-{
-    if (index == 0 || index >= 4)
+    inline void execute(frame &frame, std::size_t index)
     {
-        execute_task(index+1, l, r);
+        std::thread([&frame, index]()
+                    { run(frame, index); })
+            .detach();
+        // run(frame, index);
     }
-    else if (index == 1)
+
+    inline frame make_frame(const std::vector<mess::entry> &descriptor)
     {
-        // no, no! scope here
-        execute_task(2, l, r);
-        execute_task(3, l, r);
+        return {descriptor, std::vector<int>(descriptor.size())};
     }
-    else if (index == 2 || index == 3)
+
+    inline void run(const std::vector<mess::entry> &descriptor)
     {
-        execute_task(4, l, r);
+        frame frame = make_frame(descriptor);
+
+        execute(frame, 0);
     }
-}
 
-inline void execute_task(std::size_t index, const int& l, const int& r)
-{
-    runtime::execute([&index, &l, &r](){invoke_task(index, l, r);});
-}
-
-inline void invoke_task(std::size_t index, const int& l, const int& r)
-{
-    if (index != 1)
+    inline void run(std::unique_ptr<frame> ptr)
     {
-        simple_invoker(index, l, r);
+        mess::frame &frame = *ptr;
+
+        frame.descriptor.back().successors_index.push_back(frame.descriptor.size());
+        frame.descriptor.push_back(mess::entry{[ptr = std::shared_ptr(std::move(ptr))](int, int) mutable -> int
+                                               {
+                                                   std::shared_ptr release(std::move(ptr));
+                                                   return 0;
+                                               },
+                                               {},
+                                               1,
+                                               {}});
+
+        for (std::size_t i = 0; i < frame.descriptor.size(); ++i)
+        {
+            if (frame.descriptor[i].count_down_latch == 0)
+            {
+                execute(frame, i);
+            }
+        }
     }
-    else
-    {
-        scoped_invoker(index, l, r);
-    }
-}
-
-inline int run(int i0)
-{
-    //     0
-    //     |
-    //     1
-    //    / \
-    //   2   3
-    //    \ /
-    //     4
-    //     |
-    //     5
-
-    // add end task
-
-    simple_runner(0, i0, 0)
-
-    // await end task
-}
-} //namespace mess
+} // namespace mess
