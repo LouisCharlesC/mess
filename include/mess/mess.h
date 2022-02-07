@@ -13,100 +13,86 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
-#include <utility>
-#include <thread>
+#include <optional>
 #include <vector>
 
 namespace mess
 {
-    struct entry
+    constexpr std::size_t number_of_nodes = 6;
+
+    struct frame;
+
+    // TODO: move elsewhere
+    struct multi_thread_kit
     {
-        std::function<int(int, int)> invocable;
-        std::vector<int> predecessors_index;
-        int count_down_latch;
-        std::vector<int> successors_index;
+        // FIXME: must be atomic
+        using count_down_latch = std::size_t;
+
+        static bool notify_and_check_if_ready(frame &frame, std::size_t notified, std::size_t notifying);
     };
+
+    struct sequential_kit
+    {
+        using count_down_latch = std::size_t;
+
+        static bool notify_and_check_if_ready(frame &frame, std::size_t notified, std::size_t notifying);
+    };
+    // end move elsewhere
+
+    template <typename Executor>
+    struct kit_customizer
+    {
+        using kit = multi_thread_kit;
+    };
+    template <typename Executor>
+    using kit = typename kit_customizer<Executor>::kit;
+
+    struct std_thread_executor
+    {
+        template <typename F>
+        void execute(F &&f);
+    };
+
+    struct inline_executor
+    {
+        template <typename F>
+        void execute(F &&f);
+    };
+    template <>
+    struct kit_customizer<inline_executor>
+    {
+        using kit = multi_thread_kit;
+    };
+
+    using executor = inline_executor;
+
+    struct node
+    {
+        using executor = ::mess::executor;
+
+        std::function<int(int, int)> invocable;
+        std::vector<std::size_t> predecessors_index;
+        kit<executor>::count_down_latch pending_count;
+        std::vector<std::size_t> successors_index;
+    };
+    using flat_graph = std::array<mess::node, number_of_nodes + 1>;
 
     struct frame
     {
-        std::vector<mess::entry> descriptor;
-        std::vector<int> results;
+        using executor = ::mess::executor;
+
+        flat_graph graph;
+        std::array<std::optional<int>, number_of_nodes> results;
+        executor rt;
     };
 
-    inline void execute(frame &frame, std::size_t index);
-    inline void run(frame &frame, std::size_t index)
-    {
-        int lhs = 1;
-        int rhs = 1;
-        if (frame.descriptor[index].predecessors_index.size() > 0)
-        {
-            lhs = frame.results[frame.descriptor[index].predecessors_index[0]];
+    void fetch_args_and_execute(frame &frame, std::size_t index);
 
-            if (frame.descriptor[index].predecessors_index.size() > 1)
-            {
-                rhs = frame.results[frame.descriptor[index].predecessors_index[1]];
-            }
-        }
+    void thunk(int lhs, int rhs, frame &frame, std::size_t index);
 
-        if (!frame.descriptor[index].successors_index.empty())
-        {
-            frame.results[index] = frame.descriptor[index].invocable(lhs, rhs);
+    frame make_frame(const flat_graph &graph, executor rt);
 
-            const auto successors = frame.descriptor[index].successors_index;
-            for (const int successor : successors)
-            {
-                if (--frame.descriptor[successor].count_down_latch == 0)
-                {
-                    execute(frame, successor);
-                }
-            }
-        }
-        else
-        {
-            frame.descriptor[index].invocable(lhs, rhs);
-        }
-    }
+    void make_frame_and_run(const flat_graph &graph, executor rt);
 
-    inline void execute(frame &frame, std::size_t index)
-    {
-        std::thread([&frame, index]()
-                    { run(frame, index); })
-            .detach();
-        // run(frame, index);
-    }
-
-    inline frame make_frame(const std::vector<mess::entry> &descriptor)
-    {
-        return {descriptor, std::vector<int>(descriptor.size())};
-    }
-
-    inline void run(const std::vector<mess::entry> &descriptor)
-    {
-        frame frame = make_frame(descriptor);
-
-        execute(frame, 0);
-    }
-
-    inline void run(std::unique_ptr<frame> ptr)
-    {
-        mess::frame &frame = *ptr;
-
-        frame.descriptor.back().successors_index.push_back(frame.descriptor.size());
-        frame.descriptor.push_back(mess::entry{[ptr = std::shared_ptr(std::move(ptr))](int, int) mutable -> int
-                                               {
-                                                   std::shared_ptr release(std::move(ptr));
-                                                   return 0;
-                                               },
-                                               {},
-                                               1,
-                                               {}});
-
-        for (std::size_t i = 0; i < frame.descriptor.size(); ++i)
-        {
-            if (frame.descriptor[i].count_down_latch == 0)
-            {
-                execute(frame, i);
-            }
-        }
-    }
+    void run_and_take_care_of_deleting_the_frame(std::unique_ptr<frame> ptr);
 } // namespace mess
