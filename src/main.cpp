@@ -41,41 +41,35 @@ int func(int lhs, int rhs)
 int main()
 {
     ::mess::flat_graph graph;
-    std::get<0>(graph) = mess::node{func,
-                                    {},
-                                    0,
-                                    {1}};
-    std::get<1>(graph) = mess::node{func,
-                                    {0},
-                                    1,
-                                    {2, 3}};
-    std::get<2>(graph) = mess::node{func,
-                                    {1},
-                                    1,
-                                    {4}};
-    std::get<3>(graph) = mess::node{func,
-                                    {1},
-                                    1,
-                                    {4}};
-    std::get<4>(graph) = mess::node{func,
-                                    {2, 3},
-                                    2,
-                                    {5}};
+    std::get<0>(graph) = mess::node_type<1>{func,
+                                            {},
+                                            {}};
+    std::get<1>(graph) = mess::node_type<2, 3>{func,
+                                               {0},
+                                               {}};
+    std::get<2>(graph) = mess::node_type<4>{func,
+                                            {1},
+                                            {}};
+    std::get<3>(graph) = mess::node_type<4>{func,
+                                            {1},
+                                            {}};
+    std::get<4>(graph) = mess::node_type<5>{func,
+                                            {2, 3},
+                                            {}};
 
     std::atomic_flag signal;
-    std::get<5>(graph) = mess::node{[&signal](int, int) -> int
-                                    {
-                                        signal.test_and_set();
-                                        signal.notify_all();
-                                        return 0;
-                                    },
-                                    {4},
-                                    1,
-                                    {}};
-    mess::executor rt;
-    mess::run_and_take_care_of_deleting_the_frame(std::make_unique<mess::frame>(mess::make_frame(graph, rt)));
+    std::get<5>(graph) = mess::node_type<6>{[&signal](int, int) -> int
+                                            {
+                                                signal.test_and_set();
+                                                signal.notify_all();
+                                                return 0;
+                                            },
+                                            {4},
+                                            {}};
+    mess::executor_type rt;
+    mess::run_and_take_care_of_deleting_the_frame(std::make_unique<mess::frame_type>(mess::make_frame(graph, rt)));
     signal.wait(false);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     // descriptor[5] = mess::node{func,
     //                             {4},

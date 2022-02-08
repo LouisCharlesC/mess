@@ -14,28 +14,46 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <tuple>
 #include <vector>
 
 namespace mess
 {
-    constexpr std::size_t number_of_nodes = 6;
-
-    struct frame;
+    template <std::size_t...>
+    struct node_type;
+    struct frame_type;
 
     // TODO: move elsewhere
-    struct multi_thread_kit
+    class multi_thread_kit
     {
-        // FIXME: must be atomic
-        using count_down_latch = std::size_t;
+        using value_type = int;
 
-        static bool notify_and_check_if_ready(frame &frame, std::size_t notified, std::size_t notifying);
+    public:
+        template <std::size_t... Ts>
+        explicit multi_thread_kit(const node_type<Ts...> &node);
+
+        template <std::size_t notifying, std::size_t notified>
+        static bool notify_and_check_if_ready(frame_type &frame);
+
+        std::optional<value_type> result;
+
+    private:
+        // FIXME: must be atomic
+        std::size_t _pending;
     };
 
-    struct sequential_kit
+    class sequential_kit
     {
-        using count_down_latch = std::size_t;
+        using value_type = int;
 
-        static bool notify_and_check_if_ready(frame &frame, std::size_t notified, std::size_t notifying);
+    public:
+        template <std::size_t... Ts>
+        explicit sequential_kit(const node_type<Ts...> &) {}
+
+        template <std::size_t notifying, std::size_t notified>
+        static bool notify_and_check_if_ready(frame_type &frame);
+
+        std::optional<value_type> result;
     };
     // end move elsewhere
 
@@ -61,38 +79,40 @@ namespace mess
     template <>
     struct kit_customizer<inline_executor>
     {
-        using kit = multi_thread_kit;
+        using kit = sequential_kit;
     };
 
-    using executor = inline_executor;
+    using executor_type = std_thread_executor;
 
-    struct node
+    template <std::size_t... successors_index>
+    struct node_type
     {
-        using executor = ::mess::executor;
+        static constexpr std::size_t successor_count = sizeof...(successors_index);
 
         std::function<int(int, int)> invocable;
-        std::vector<std::size_t> predecessors_index;
-        kit<executor>::count_down_latch pending_count;
-        std::vector<std::size_t> successors_index;
+        std::vector<std::size_t> arg_predecessors_index;
+        std::vector<std::size_t> await_predecessors_index;
     };
-    using flat_graph = std::array<mess::node, number_of_nodes + 1>;
+    using flat_graph = std::tuple<node_type<1>, node_type<2, 3>, node_type<4>, node_type<4>, node_type<5>, node_type<6>, node_type<>>;
 
-    struct frame
+    struct frame_type
     {
-        using executor = ::mess::executor;
+        using executor = ::mess::executor_type;
 
         flat_graph graph;
-        std::array<std::optional<int>, number_of_nodes> results;
+        std::array<kit<executor>, std::tuple_size_v<flat_graph>> runtime;
         executor rt;
     };
 
-    void fetch_args_and_execute(frame &frame, std::size_t index);
+    template <std::size_t index>
+    void fetch_args_and_execute(frame_type &frame);
 
-    void thunk(int lhs, int rhs, frame &frame, std::size_t index);
+    template <std::size_t index>
+    void thunk(int lhs, int rhs, frame_type &frame);
 
-    frame make_frame(const flat_graph &graph, executor rt);
+    frame_type make_frame(const flat_graph &graph, executor_type rt);
 
-    void make_frame_and_run(const flat_graph &graph, executor rt);
+    void make_frame_and_run(const flat_graph &graph, executor_type rt);
 
-    void run_and_take_care_of_deleting_the_frame(std::unique_ptr<frame> ptr);
+    void run_and_take_care_of_deleting_the_frame(std::unique_ptr<frame_type> ptr);
 } // namespace mess

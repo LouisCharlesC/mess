@@ -23,9 +23,15 @@ namespace mess
             .detach();
     }
 
-    bool multi_thread_kit::notify_and_check_if_ready(frame &frame, std::size_t notified, std::size_t)
+    template <std::size_t... Ts>
+    multi_thread_kit::multi_thread_kit(const node_type<Ts...> &node) : _pending(node.arg_predecessors_index.size() + node.await_predecessors_index.size())
     {
-        return --frame.graph[notified].pending_count == 0;
+    }
+
+    template <std::size_t, std::size_t notified>
+    bool multi_thread_kit::notify_and_check_if_ready(frame_type &frame)
+    {
+        return --std::get<notified>(frame.runtime)._pending == 0;
     }
 
     template <typename F>
@@ -34,102 +40,120 @@ namespace mess
         std::forward<F>(f)();
     }
 
-    bool sequential_kit::notify_and_check_if_ready(frame &frame, std::size_t notified, std::size_t notifying)
+    template <std::size_t notifying, std::size_t notified>
+    bool sequential_kit::notify_and_check_if_ready(frame_type &frame)
     {
-        // FIXME: Not gonna work with non-arg predeccessors.
-        return frame.graph[notified].predecessors_index.empty() || frame.graph[notified].predecessors_index.back() == notifying;
+        return std::get<notified>(frame.graph).await_predecessors_index.empty() && std::get<notified>(frame.graph).arg_predecessors_index.back() == notifying ||
+               !std::get<notified>(frame.graph).await_predecessors_index.empty() && std::get<notified>(frame.graph).await_predecessors_index.back() == notifying;
     }
 
-    void fetch_args_and_execute(frame &frame, std::size_t index)
+    template <std::size_t index>
+    void fetch_args_and_execute(frame_type &frame)
     {
         int lhs = 1;
         int rhs = 1;
-        if (frame.graph[index].predecessors_index.size() > 0)
+        if (std::get<index>(frame.graph).arg_predecessors_index.size() > 0)
         {
-            lhs = *frame.results[frame.graph[index].predecessors_index[0]];
+            lhs = *frame.runtime[std::get<index>(frame.graph).arg_predecessors_index[0]].result;
 
-            if (frame.graph[index].predecessors_index.size() > 1)
+            if (std::get<index>(frame.graph).arg_predecessors_index.size() > 1)
             {
-                rhs = *frame.results[frame.graph[index].predecessors_index[1]];
+                rhs = *frame.runtime[std::get<index>(frame.graph).arg_predecessors_index[1]].result;
             }
         }
 
-        frame.rt.execute([lhs, rhs, &frame, index]()
-                         { thunk(lhs, rhs, frame, index); });
+        frame.rt.execute([lhs, rhs, &frame]()
+                         { thunk<index>(lhs, rhs, frame); });
     }
 
-    void thunk(int lhs, int rhs, frame &frame, std::size_t index)
+    template <std::size_t notifying, std::size_t notified>
+    static void notify_and_execute_if_ready(frame_type &frame)
     {
-        // This if only to avoid accessing non existing result for the task that deletes the frame.
-        if (!frame.graph[index].successors_index.empty())
+        if (kit<executor_type>::notify_and_check_if_ready<notifying, notified>(frame))
         {
-            frame.results[index] = frame.graph[index].invocable(lhs, rhs);
+            fetch_args_and_execute<notified>(frame);
+        }
+    }
 
-            const auto successors = frame.graph[index].successors_index;
-            for (const int successor : successors)
-            {
-                if (kit<executor>::notify_and_check_if_ready(frame, successor, index))
-                {
-                    fetch_args_and_execute(frame, successor);
-                }
-            }
+    template <std::size_t notifying, std::size_t... successors>
+    static void notify_and_execute_ready_successors(frame_type &frame, node_type<successors...> &)
+    {
+        (notify_and_execute_if_ready<notifying, successors>(frame), ...);
+    }
+
+    template <std::size_t notifying>
+    static void notify_and_execute_ready_successors(frame_type &frame)
+    {
+        notify_and_execute_ready_successors<notifying>(frame, std::get<notifying>(frame.graph));
+    }
+
+    template <std::size_t index>
+    void thunk(int lhs, int rhs, frame_type &frame)
+    {
+        // Do not store the result if there are no successors interested in it.
+        if constexpr (std::tuple_element_t<index, flat_graph>::successor_count != 0)
+        {
+            frame.runtime[index].result = std::get<index>(frame.graph).invocable(lhs, rhs);
+
+            notify_and_execute_ready_successors<index>(frame);
         }
         else
         {
-            frame.graph[index].invocable(lhs, rhs);
+            std::get<index>(frame.graph).invocable(lhs, rhs);
         }
     }
 
-    frame make_frame(const flat_graph &graph, executor rt)
+    template <std::size_t... indexes>
+    static frame_type make_frame(const flat_graph &graph, executor_type executor, std::index_sequence<indexes...>)
     {
-        return {graph, {}, rt};
+        return {graph, {kit<executor_type>(std::get<indexes>(graph))...}, executor};
     }
 
-    static void run(frame &frame)
+    frame_type make_frame(const flat_graph &graph, executor_type executor)
     {
-        const auto graph = frame.graph;
-        for (std::size_t i = 0; i < graph.size(); ++i)
+        return make_frame(graph, executor, std::make_index_sequence<std::tuple_size_v<flat_graph>>());
+    }
+
+    template <std::size_t index>
+    static void execute_if_root(frame_type &frame)
+    {
+        if (std::get<index>(frame.graph).arg_predecessors_index.empty() && std::get<index>(frame.graph).await_predecessors_index.empty())
         {
-            if (graph[i].pending_count == 0)
-            {
-                fetch_args_and_execute(frame, i);
-            }
+            fetch_args_and_execute<index>(frame);
         }
     }
 
-    void make_frame_and_run(const flat_graph &graph, executor rt)
+    template <std::size_t... indexes>
+    static void execute_root_nodes(frame_type &frame, std::index_sequence<indexes...>)
+    {
+        (execute_if_root<indexes>(frame), ...);
+    }
+
+    static void execute_root_nodes(frame_type &frame)
+    {
+        execute_root_nodes(frame, std::make_index_sequence<std::tuple_size_v<flat_graph>>());
+    }
+
+    void make_frame_and_run(const flat_graph &graph, executor_type rt)
     {
         auto frame = make_frame(graph, rt);
 
-        run(frame);
+        execute_root_nodes(frame);
     }
 
-    // bool add_guard_successor(std::vector<std::size_t> &successors)
-    // {
-    // }
-
-    void run_and_take_care_of_deleting_the_frame(std::unique_ptr<frame> ptr)
+    void run_and_take_care_of_deleting_the_frame(std::unique_ptr<frame_type> ptr)
     {
         auto &frame = *ptr;
 
-        std::size_t numberOfPredessors = 0;
-        for (auto node = frame.graph.begin(); node != frame.graph.end() - 1; ++node)
-        {
-            if (node->successors_index.empty())
-            {
-                node->successors_index.push_back(number_of_nodes);
-                ++numberOfPredessors;
-            }
-        }
-        std::get<number_of_nodes>(frame.graph) = mess::node{[ptr = std::shared_ptr(std::move(ptr))](int, int) mutable -> int
-                                                            {
-                                                                std::shared_ptr release(std::move(ptr));
-                                                                return 0;
-                                                            },
-                                                            {},
-                                                            numberOfPredessors,
-                                                            {}};
+        std::get<std::tuple_size_v<flat_graph> - 1>(frame.graph) = mess::node_type<>{[ptr = std::shared_ptr(std::move(ptr))](int, int) mutable -> int
+                                                                                     {
+                                                                                         std::shared_ptr release(std::move(ptr));
+                                                                                         return 0;
+                                                                                     },
+                                                                                     {},
+                                                                                     {5}};
+        std::get<std::tuple_size_v<flat_graph> - 1>(frame.runtime) = kit<executor_type>(std::get<std::tuple_size_v<flat_graph> - 1>(frame.graph));
 
-        run(frame);
+        execute_root_nodes(frame);
     }
 } // namespace mess
