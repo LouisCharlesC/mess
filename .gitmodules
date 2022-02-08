@@ -1,0 +1,3 @@
+[submodule "extern/taocpp-sequences"]
+	path = extern/taocpp-sequences
+	url = ../../taocpp/sequences.git

@@ -104,6 +104,10 @@ namespace mess
         run(frame);
     }
 
+    // bool add_guard_successor(std::vector<std::size_t> &successors)
+    // {
+    // }
+
     void run_and_take_care_of_deleting_the_frame(std::unique_ptr<frame> ptr)
     {
         auto &frame = *ptr;

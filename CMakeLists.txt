@@ -6,12 +6,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 include(Warnings)
+include(Submodules)
 
 find_package(Threads REQUIRED)
+add_subdirectory(extern/taocpp-sequences)
 
 add_library(${PROJECT_NAME} src/mess.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads PRIVATE -fsanitize=undefined,address -fno-omit-frame-pointer)
+target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads taocpp::sequences PRIVATE -fsanitize=undefined,address -fno-omit-frame-pointer)
 target_set_warnings(${PROJECT_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 set_target_properties(
 	${PROJECT_NAME}
