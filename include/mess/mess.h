@@ -9,17 +9,17 @@
  *
  */
 
-#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <optional>
+#include <thread>
 #include <tuple>
 #include <vector>
 
 namespace mess
 {
-    template <std::size_t...>
+    template <typename invocable_type, typename arg_predecessors_type, typename successors_type>
     struct node_type;
     struct frame_type;
 
@@ -29,8 +29,8 @@ namespace mess
         using value_type = int;
 
     public:
-        template <std::size_t... Ts>
-        explicit multi_thread_kit(const node_type<Ts...> &node);
+        template <typename invocable_type, typename arg_predecessors, typename successors>
+        explicit multi_thread_kit(const node_type<invocable_type, arg_predecessors, successors> &node);
 
         template <std::size_t notifying, std::size_t notified>
         static bool notify_and_check_if_ready(frame_type &frame);
@@ -47,8 +47,8 @@ namespace mess
         using value_type = int;
 
     public:
-        template <std::size_t... Ts>
-        explicit sequential_kit(const node_type<Ts...> &) {}
+        template <typename invocable_type, typename arg_predecessors, typename successors>
+        explicit sequential_kit(const node_type<invocable_type, arg_predecessors, successors> &node) {}
 
         template <std::size_t notifying, std::size_t notified>
         static bool notify_and_check_if_ready(frame_type &frame);
@@ -65,10 +65,16 @@ namespace mess
     template <typename Executor>
     using kit = typename kit_customizer<Executor>::kit;
 
-    struct std_thread_executor
+    class std_thread_executor
     {
+    public:
         template <typename F>
         void execute(F &&f);
+
+        void join();
+
+    private:
+        std::vector<std::thread> _threads;
     };
 
     struct inline_executor
@@ -82,18 +88,54 @@ namespace mess
         using kit = sequential_kit;
     };
 
-    using executor_type = std_thread_executor;
+    using executor_type = inline_executor;
 
-    template <std::size_t... successors_index>
+    template <std::size_t... indexes>
+    struct list
+    {
+        static constexpr std::size_t count = sizeof...(indexes);
+        static constexpr bool empty = count == 0;
+    };
+    template <std::size_t... indexes>
+    struct arg_predecessors : list<indexes...>
+    {
+    };
+    template <std::size_t... indexes>
+    struct await_predecessors : list<indexes...>
+    {
+    };
+    template <std::size_t... indexes>
+    struct successors : list<indexes...>
+    {
+    };
+
+    template <std::size_t... indexes>
+    constexpr bool is_arg_predecessors_type(arg_predecessors<indexes...>) { return true; }
+    template <std::size_t... indexes>
+    constexpr bool is_await_predecessors_type(await_predecessors<indexes...>) { return true; }
+    template <std::size_t... indexes>
+    constexpr bool is_successors_type(successors<indexes...>) { return true; }
+
+    template <std::size_t... indexes>
+    struct successors;
+
+    template <typename invocable_type, typename arg_predecessors_type, typename successors_type>
     struct node_type
     {
-        static constexpr std::size_t successor_count = sizeof...(successors_index);
+        static_assert(is_arg_predecessors_type(arg_predecessors_type()), "mess::node_type's second template argument must be of type mess::arg_predecessors.");
+        using arg_predecessors = arg_predecessors_type;
+        static_assert(is_successors_type(successors_type()), "mess::node_type's forth template argument must be of type mess::successors_type.");
+        using successors = successors_type;
 
-        std::function<int(int, int)> invocable;
-        std::vector<std::size_t> arg_predecessors_index;
+        invocable_type invocable;
         std::vector<std::size_t> await_predecessors_index;
     };
-    using flat_graph = std::tuple<node_type<1>, node_type<2, 3>, node_type<4>, node_type<4>, node_type<5>, node_type<6>, node_type<>>;
+    using flat_graph = std::tuple<node_type<int (&)(), arg_predecessors<>, successors<1>>,
+                                  node_type<int (&)(int), arg_predecessors<0>, successors<2, 3>>,
+                                  node_type<int (&)(int), arg_predecessors<1>, successors<4>>,
+                                  node_type<int (&)(int), arg_predecessors<1>, successors<4>>,
+                                  node_type<int (&)(int, int), arg_predecessors<2, 3>, successors<5>>,
+                                  node_type<int (&)(int), arg_predecessors<4>, successors<>>>;
 
     struct frame_type
     {
@@ -107,8 +149,8 @@ namespace mess
     template <std::size_t index>
     void fetch_args_and_execute(frame_type &frame);
 
-    template <std::size_t index>
-    void thunk(int lhs, int rhs, frame_type &frame);
+    template <std::size_t index, typename... args_type>
+    void thunk(frame_type &frame, args_type... args);
 
     frame_type make_frame(const flat_graph &graph, executor_type rt);
 

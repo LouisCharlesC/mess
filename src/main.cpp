@@ -11,15 +11,26 @@
 
 #include "mess/mess.h"
 
-#include <array>
 #include <atomic>
 #include <chrono>
 #include <iostream>
 #include <memory>
 #include <thread>
-#include <utility>
-#include <vector>
 
+int func()
+{
+    constexpr int sum = 1;
+    std::this_thread::sleep_for(std::chrono::milliseconds(sum * 100));
+    std::cout << sum << std::endl;
+    return sum;
+}
+int func(int in)
+{
+    const int sum = in + 1;
+    std::this_thread::sleep_for(std::chrono::milliseconds(sum * 100));
+    std::cout << sum << std::endl;
+    return sum;
+}
 int func(int lhs, int rhs)
 {
     const int sum = lhs + rhs;
@@ -40,50 +51,24 @@ int func(int lhs, int rhs)
 
 int main()
 {
-    ::mess::flat_graph graph;
-    std::get<0>(graph) = mess::node_type<1>{func,
-                                            {},
-                                            {}};
-    std::get<1>(graph) = mess::node_type<2, 3>{func,
-                                               {0},
-                                               {}};
-    std::get<2>(graph) = mess::node_type<4>{func,
-                                            {1},
-                                            {}};
-    std::get<3>(graph) = mess::node_type<4>{func,
-                                            {1},
-                                            {}};
-    std::get<4>(graph) = mess::node_type<5>{func,
-                                            {2, 3},
-                                            {}};
+    ::mess::flat_graph graph = ::mess::flat_graph{mess::node_type<int (&)(), mess::arg_predecessors<>, mess::successors<1>>{func, {}},
+                                                  mess::node_type<int (&)(int), mess::arg_predecessors<0>, mess::successors<2, 3>>{func,
+                                                                                                                                   {}},
+                                                  mess::node_type<int (&)(int), mess::arg_predecessors<1>, mess::successors<4>>{func,
+                                                                                                                                {}},
+                                                  mess::node_type<int (&)(int), mess::arg_predecessors<1>, mess::successors<4>>{func,
+                                                                                                                                {}},
+                                                  mess::node_type<int (&)(int, int), mess::arg_predecessors<2, 3>, mess::successors<5>>{func,
+                                                                                                                                        {}},
+                                                  mess::node_type<int (&)(int), mess::arg_predecessors<4>, mess::successors<>>{func, {}}};
 
-    std::atomic_flag signal;
-    std::get<5>(graph) = mess::node_type<6>{[&signal](int, int) -> int
-                                            {
-                                                signal.test_and_set();
-                                                signal.notify_all();
-                                                return 0;
-                                            },
-                                            {4},
-                                            {}};
     mess::executor_type rt;
-    mess::run_and_take_care_of_deleting_the_frame(std::make_unique<mess::frame_type>(mess::make_frame(graph, rt)));
-    signal.wait(false);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    // descriptor[5] = mess::node{func,
-    //                             {4},
-    //                             1,
-    //                             {}};
-    // mess::run(descriptor, rt);
+    mess::make_frame_and_run(graph, rt);
+    // mess::run_and_take_care_of_deleting_the_frame(std::make_unique<mess::frame_type>(mess::make_frame(graph, rt)));
 }
 
-// constexpr number of entries
-//   std::tuple<entry...>
-// customize on runtime, think about the kit
-//    kit: execute, countdownlatch/isready
 // constexpr arguments index
 // remove std::function, shared_ptr to unique_ptr
-// constexpr successors index
-// atomic latch, maybe ?
+// atomic latch
 // allow providing a function to call last, I guess then run() should return whatever must stay alive for the function to be called after all else is deleted
