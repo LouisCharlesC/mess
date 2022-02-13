@@ -70,13 +70,12 @@ int main()
 
     mess::run(frame);
     executor.join();
-    mess::run_and_take_care_of_deleting_the_frame(std::make_unique<frame_type>(executor, graph));
+    mess::run(std::make_unique<frame_type>(executor, graph));
 }
 
-// allow different returns :(
-// frame should be mostly private, and only allow access to result, that would be neat!
-// executor can tell if it was stopped
+// allow different returns :( // sort indexes in order of execution, remove input successors
+// executor can tell if it was stopped // if throw, catch and quit, but clean-up must be run
 // check for constexpr stuff
 // check inline executor actually is like sequential code
-// sort indexes in order of execution
-// if throw, catch and quit, but clean-up must be run
+// replace executor by scheduler
+// frame should be mostly private, and only allow access to result (then friend every function that needs access), that would be neat!
