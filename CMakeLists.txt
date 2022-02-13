@@ -11,7 +11,7 @@ include(Submodules)
 find_package(Threads REQUIRED)
 add_subdirectory(extern/taocpp-sequences)
 
-add_library(${PROJECT_NAME} src/mess.cpp)
+add_library(${PROJECT_NAME} src/executors/std_thread.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
 target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads taocpp::sequences PRIVATE -fsanitize=undefined,address -fno-omit-frame-pointer)
 target_set_warnings(${PROJECT_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)

@@ -9,7 +9,7 @@
  *
  */
 
-#include "mess/mess.h"
+#include "mess/mess.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -17,58 +17,66 @@
 #include <memory>
 #include <thread>
 
-int func()
+int func_0()
 {
     constexpr int sum = 1;
-    std::this_thread::sleep_for(std::chrono::milliseconds(sum * 100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(sum * 200));
     std::cout << sum << std::endl;
     return sum;
 }
-int func(int in)
+int func_1(int in)
 {
     const int sum = in + 1;
-    std::this_thread::sleep_for(std::chrono::milliseconds(sum * 100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(sum * 200));
     std::cout << sum << std::endl;
     return sum;
 }
-int func(int lhs, int rhs)
+int func_2(int lhs, int rhs)
 {
-    const int sum = lhs + rhs;
-    std::this_thread::sleep_for(std::chrono::milliseconds(sum * 100));
+    const int sum = lhs + rhs + 1;
+    std::this_thread::sleep_for(std::chrono::milliseconds(sum * 200));
     std::cout << sum << std::endl;
     return sum;
 }
 
 //     0
 //     |
-//     1
-//    / \
+//     1   6
+//    / \ /
 //   2   3
 //    \ /
 //     4
-//     |
-//     5
+//     | \
+//     5  7
+//
+//  [clean up]
 
 int main()
 {
-    ::mess::flat_graph graph = ::mess::flat_graph{mess::node_type<int (&)(), mess::arg_predecessors<>, mess::successors<1>>{func, {}},
-                                                  mess::node_type<int (&)(int), mess::arg_predecessors<0>, mess::successors<2, 3>>{func,
-                                                                                                                                   {}},
-                                                  mess::node_type<int (&)(int), mess::arg_predecessors<1>, mess::successors<4>>{func,
-                                                                                                                                {}},
-                                                  mess::node_type<int (&)(int), mess::arg_predecessors<1>, mess::successors<4>>{func,
-                                                                                                                                {}},
-                                                  mess::node_type<int (&)(int, int), mess::arg_predecessors<2, 3>, mess::successors<5>>{func,
-                                                                                                                                        {}},
-                                                  mess::node_type<int (&)(int), mess::arg_predecessors<4>, mess::successors<>>{func, {}}};
+    auto graph = mess::make_graph(mess::make_node<mess::arg_predecessors<>, mess::await_predecessors<>, mess::successors<1>>(func_0),
+                                  mess::make_node<mess::arg_predecessors<0>, mess::await_predecessors<>, mess::successors<2, 3>>(func_1),
+                                  mess::make_node<mess::arg_predecessors<1>, mess::await_predecessors<>, mess::successors<4>>(func_1),
+                                  mess::make_node<mess::arg_predecessors<1, 6>, mess::await_predecessors<>, mess::successors<4>>(func_2),
+                                  mess::make_node<mess::arg_predecessors<2, 3>, mess::await_predecessors<>, mess::successors<5, 7>>(func_2),
+                                  mess::make_node<mess::arg_predecessors<4>, mess::await_predecessors<>, mess::successors<>>(func_1),
+                                  mess::make_node<mess::arg_predecessors<>, mess::await_predecessors<>, mess::successors<3>>(func_0),
+                                  mess::make_node<mess::arg_predecessors<4>, mess::await_predecessors<>, mess::successors<>>(func_1));
+    // auto graph = mess::make_graph(mess::make_node<mess::arg_predecessors<>, mess::await_predecessors<>, mess::successors<>>(func_0));
 
-    mess::executor_type rt;
+    using executor_type = mess::std_thread_executor;
+    using frame_type = mess::frame_type<executor_type, decltype(graph)>;
+    executor_type executor;
+    frame_type frame(executor, graph);
 
-    mess::make_frame_and_run(graph, rt);
-    // mess::run_and_take_care_of_deleting_the_frame(std::make_unique<mess::frame_type>(mess::make_frame(graph, rt)));
+    mess::run(frame);
+    executor.join();
+    mess::run_and_take_care_of_deleting_the_frame(std::make_unique<frame_type>(executor, graph));
 }
 
-// constexpr arguments index
-// remove std::function, shared_ptr to unique_ptr
-// atomic latch
-// allow providing a function to call last, I guess then run() should return whatever must stay alive for the function to be called after all else is deleted
+// allow different returns :(
+// frame should be mostly private, and only allow access to result, that would be neat!
+// executor can tell if it was stopped
+// check for constexpr stuff
+// check inline executor actually is like sequential code
+// sort indexes in order of execution
+// if throw, catch and quit, but clean-up must be run
