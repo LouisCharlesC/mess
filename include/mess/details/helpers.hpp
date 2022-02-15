@@ -12,10 +12,10 @@
 #pragma once
 
 #include <mess/frame.hpp>
-#include <mess/kits.hpp>
-#include <mess/meta/list.hpp>
 
 #include <cstdint>
+#include <memory>
+#include <tuple>
 #include <utility>
 
 namespace mess
@@ -32,6 +32,31 @@ namespace mess
         template <bool is_self_delete>
         struct self_delete
         {
+            template <std::size_t index, typename executor_type, typename flat_graph, typename... args_type>
+            static void thunk(frame_type<executor_type, flat_graph> &frame, const args_type &...args) noexcept
+            {
+                // Do not store the result if there are no successors interested in it.
+                if constexpr (!successors<index, flat_graph>::empty)
+                {
+                    // TODO: use std::invoke
+                    std::get<index>(frame.runtime).result = std::get<index>(frame.graph).invocable(args...);
+
+                    notify_and_execute_ready_successors<index>(frame);
+                }
+                else
+                {
+                    std::get<index>(frame.graph).invocable(args...);
+
+                    if constexpr (is_self_delete)
+                    {
+                        if (frame.self_delete_latch.template notify_and_check_if_ready<index>())
+                        {
+                            delete (std::addressof(frame));
+                        }
+                    }
+                }
+            }
+
             template <std::size_t index, typename executor_type, typename flat_graph, std::size_t... arg_predecessors_index>
             static void fetch_args_and_execute(frame_type<executor_type, flat_graph> &frame, mess::arg_predecessors<arg_predecessors_index...>)
             {
@@ -49,7 +74,7 @@ namespace mess
             template <std::size_t notifying, std::size_t notified, typename executor_type, typename flat_graph>
             static void notify_and_execute_if_ready(frame_type<executor_type, flat_graph> &frame)
             {
-                if (std::get<notified>(frame.runtime).template notify_and_check_if_ready<notifying>())
+                if (std::get<notified>(frame.runtime).latch.template notify_and_check_if_ready<notifying>())
                 {
                     fetch_args_and_execute<notified>(frame);
                 }
@@ -87,30 +112,6 @@ namespace mess
             static void execute_root_nodes(frame_type<executor_type, flat_graph> &frame)
             {
                 execute_root_nodes(frame, std::make_index_sequence<std::tuple_size_v<flat_graph>>());
-            }
-
-            template <std::size_t index, typename executor_type, typename flat_graph, typename... args_type>
-            static void thunk(frame_type<executor_type, flat_graph> &frame, args_type... args) noexcept
-            {
-                // Do not store the result if there are no successors interested in it.
-                if constexpr (!successors<index, flat_graph>::empty)
-                {
-                    std::get<index>(frame.runtime).result = std::get<index>(frame.graph).invocable(args...);
-
-                    notify_and_execute_ready_successors<index>(frame);
-                }
-                else
-                {
-                    std::get<index>(frame.graph).invocable(args...);
-
-                    if constexpr (is_self_delete)
-                    {
-                        if (frame.clean_up_latch.template notify_and_check_if_ready<index>())
-                        {
-                            delete (std::addressof(frame));
-                        }
-                    }
-                }
             }
         };
     } // namespace details

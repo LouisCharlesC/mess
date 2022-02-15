@@ -10,6 +10,7 @@
  */
 
 #include "mess/mess.hpp"
+#include "mess/executors/std_thread.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -17,9 +18,9 @@
 #include <memory>
 #include <thread>
 
-int func_0()
+char func_0()
 {
-    constexpr int sum = 1;
+    static char sum = 1;
     std::this_thread::sleep_for(std::chrono::milliseconds(sum * 200));
     std::cout << sum << std::endl;
     return sum;
@@ -68,14 +69,19 @@ int main()
     executor_type executor;
     frame_type frame(executor, graph);
 
-    mess::run(frame);
-    executor.join();
+    // mess::run(frame);
+    // executor.join();
     mess::run(std::make_unique<frame_type>(executor, graph));
 }
 
-// allow different returns :( // sort indexes in order of execution, remove input successors
-// executor can tell if it was stopped // if throw, catch and quit, but clean-up must be run
-// check for constexpr stuff
-// check inline executor actually is like sequential code
+// clean up latch must get all successor-less nodes
+// sort indexes in order of execution, remove input successors?
+// rename await_preds other_preds
+// comment stuff ? better sort between details or not ?
+// if throw, catch and quit, but clean-up must be run // executor can tell if it was stopped
+// test the hell out of this // check for constexpr stuff // check inline executor actually is like sequential code
+// Set CI back up
 // replace executor by scheduler
 // frame should be mostly private, and only allow access to result (then friend every function that needs access), that would be neat!
+// rerun to reuse frame ?
+// if all successors only have one predecessor, do not store the result and feed it directly ?

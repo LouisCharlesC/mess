@@ -23,16 +23,7 @@ namespace mess
             static constexpr std::size_t count = sizeof...(indexes);
             static constexpr bool empty = count == 0;
         };
-
-        template <std::size_t... indexes, std::size_t... other_indexes>
-        static constexpr auto concatenate(list<indexes...>, list<other_indexes...>)
-        {
-            return list<indexes..., other_indexes...>();
-        }
     } // namespace details
-
-    template <typename list, typename other_list>
-    using concatenate = decltype(details::concatenate(list(), other_list()));
 
     template <std::size_t... indexes>
     struct arg_predecessors : details::list<indexes...>

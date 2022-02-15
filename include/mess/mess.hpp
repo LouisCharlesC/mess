@@ -13,9 +13,9 @@
 
 #include <mess/details/helpers.hpp>
 #include <mess/frame.hpp>
-#include <mess/kits.hpp>
 
 #include <memory>
+#include <utility>
 
 namespace mess
 {
@@ -38,7 +38,7 @@ namespace mess
     }
 
     template <typename executor_type, typename... nodes_type>
-    void run(std::unique_ptr<frame_type<executor_type, flat_graph<nodes_type...>>> &&ptr)
+    void run(std::unique_ptr<frame_type<executor_type, flat_graph<nodes_type...>>> ptr)
     {
         details::self_delete<true>::execute_root_nodes(*ptr.release());
     }
