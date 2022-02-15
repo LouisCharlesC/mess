@@ -14,10 +14,12 @@
 #include <mess/kit_customizer.hpp>
 #include <mess/latches/ready.hpp>
 #include <mess/meta/concatenate.hpp>
-#include <mess/meta/graph.hpp>
+#include <mess/meta/invoke_result.hpp>
+#include <mess/meta/leaf_nodes.hpp>
 #include <mess/meta/list.hpp>
 
 #include <cstdint>
+#include <tuple>
 #include <utility>
 
 namespace mess
@@ -64,30 +66,41 @@ namespace mess
     {
     };
 
-    namespace details
+    namespace
     {
         template <typename executor_type, typename value_type, std::size_t... predecessors>
-        static constexpr auto make_kit(details::list<predecessors...>)
+        auto make_kit(details::list<predecessors...>) noexcept
         {
             return kit<executor_type, value_type, predecessors...>();
         }
         template <typename executor_type, typename value_type, typename node_type>
-        static constexpr auto make_kit()
+        auto make_kit() noexcept
         {
-            using arg_predecessors = typename node_type::arg_predecessors::list;
-            using await_predecessors = typename node_type::await_predecessors::list;
-            using predecessors = mess::concatenate<arg_predecessors, await_predecessors>;
-
-            return make_kit<executor_type, value_type>(predecessors());
+            return make_kit<executor_type, value_type>(typename node_type::all_predecessors());
         }
 
         template <typename executor_type, typename flat_graph, std::size_t... indexes>
-        static constexpr decltype(std::make_tuple(make_kit<executor_type, invoke_result<flat_graph, indexes>, std::tuple_element_t<indexes, flat_graph>>()...)) make_runtime_state(std::index_sequence<indexes...>) noexcept
+        auto make_runtime_state(std::index_sequence<indexes...>) noexcept
         {
-            return {};
+            return std::tuple<decltype(make_kit<executor_type, details::invoke_result<flat_graph, indexes>, std::tuple_element_t<indexes, flat_graph>>())...>();
         }
 
-        template <typename executor_type, typename flat_graph>
-        using runtime_state = decltype(make_runtime_state<executor_type, flat_graph>(std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
-    } // namespace details
+        template <typename executor_type, std::size_t... indexes>
+        auto make_self_delete_latch(details::list<indexes...>) noexcept
+        {
+            return typename kit_customizer<executor_type>::template latch_type<indexes...>();
+        }
+
+        template <typename executor_type, typename flat_graph, std::size_t... indexes>
+        auto make_self_delete_latch(std::index_sequence<indexes...>) noexcept
+        {
+            return make_self_delete_latch<executor_type>(leaf_nodes<flat_graph, indexes...>());
+        }
+    } // namespace
+
+    template <typename executor_type, typename flat_graph>
+    using runtime_state = decltype(make_runtime_state<executor_type, flat_graph>(std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
+
+    template <typename executor_type, typename flat_graph>
+    using self_delete_latch = decltype(make_self_delete_latch<executor_type, flat_graph>(std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
 } // namespace mess

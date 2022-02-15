@@ -1,5 +1,5 @@
 /**
- * @file graph.hpp
+ * @file invoke_result.hpp
  * @author L.-C. C. (me@domain.com)
  * @brief
  * @version 0.1
@@ -29,8 +29,5 @@ namespace mess
         {
             return std::invoke_result_t<typename std::tuple_element_t<index, flat_graph>::invocable_type, invoke_result<flat_graph, arg_predecessors_index>...>{};
         }
-
-        // template <typename all_predecessors, typename ordered_nodes>
-        // using ordered_predecessors = decltype(order_according_to(all_predecessors(), ordered_nodes()));
     } // namespace details
 } // namespace mess

@@ -19,10 +19,10 @@
 
 namespace mess
 {
-    template <typename arg_predecessors_type, typename await_predecessors_type, typename successors_type, typename invocable_type>
+    template <typename arg_predecessors_type, typename other_predecessors_type, typename successors_type, typename invocable_type>
     auto make_node(invocable_type invocable)
     {
-        return node_type<invocable_type, arg_predecessors_type, await_predecessors_type, successors_type>{std::forward<invocable_type>(invocable)};
+        return node_type<invocable_type, arg_predecessors_type, other_predecessors_type, successors_type>{std::forward<invocable_type>(invocable)};
     }
 
     template <typename... nodes_type>

@@ -12,6 +12,7 @@
 #pragma once
 
 #include <mess/frame.hpp>
+#include <mess/meta/leaf_nodes.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -25,7 +26,7 @@ namespace mess
         template <std::size_t index, typename flat_graph>
         using arg_predecessors = typename std::tuple_element_t<index, flat_graph>::arg_predecessors;
         template <std::size_t index, typename flat_graph>
-        using await_predecessors = typename std::tuple_element_t<index, flat_graph>::await_predecessors;
+        using all_predecessors = typename std::tuple_element_t<index, flat_graph>::all_predecessors;
         template <std::size_t index, typename flat_graph>
         using successors = typename std::tuple_element_t<index, flat_graph>::successors;
 
@@ -36,7 +37,7 @@ namespace mess
             static void thunk(frame_type<executor_type, flat_graph> &frame, const args_type &...args) noexcept
             {
                 // Do not store the result if there are no successors interested in it.
-                if constexpr (!successors<index, flat_graph>::empty)
+                if constexpr (!is_leaf<flat_graph, index>())
                 {
                     // TODO: use std::invoke
                     std::get<index>(frame.runtime).result = std::get<index>(frame.graph).invocable(args...);
@@ -95,8 +96,7 @@ namespace mess
             template <std::size_t index, typename executor_type, typename flat_graph>
             static void execute_if_root(frame_type<executor_type, flat_graph> &frame)
             {
-                if constexpr (arg_predecessors<index, flat_graph>::empty &&
-                              await_predecessors<index, flat_graph>::empty)
+                if constexpr (all_predecessors<index, flat_graph>::empty)
                 {
                     fetch_args_and_execute<index>(frame);
                 }

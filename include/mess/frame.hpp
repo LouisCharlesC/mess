@@ -22,16 +22,17 @@ namespace mess
     template <typename... nodes_type>
     using flat_graph = std::tuple<nodes_type...>;
 
-    template <typename invocable_type_arg, typename arg_predecessors_type, typename await_predecessors_type, typename successors_type>
+    template <typename invocable_type_arg, typename arg_predecessors_type, typename other_predecessors_type, typename successors_type>
     struct node_type
     {
         static_assert(is_arg_predecessors_type(arg_predecessors_type()), "mess::node_type's second template argument must be of type mess::arg_predecessors.");
-        static_assert(is_await_predecessors_type(await_predecessors_type()), "mess::node_type's third template argument must be of type mess::await_predecessors.");
+        static_assert(is_other_predecessors_type(other_predecessors_type()), "mess::node_type's third template argument must be of type mess::other_predecessors.");
         static_assert(is_successors_type(successors_type()), "mess::node_type's forth template argument must be of type mess::successors.");
 
         using invocable_type = invocable_type_arg;
         using arg_predecessors = arg_predecessors_type;
-        using await_predecessors = await_predecessors_type;
+        using all_predecessors = concatenate<arg_predecessors_type, other_predecessors_type>;
+        // using ordered_predecessors = ;
         using successors = successors_type;
 
         invocable_type invocable;
@@ -47,11 +48,11 @@ namespace mess
         }
 
         // TODO: static check node types and flat_graph
-        using runtime_state = details::runtime_state<executor_type, flat_graph>;
+        using runtime_state = runtime_state<executor_type, flat_graph>;
 
         executor_type &executor;
         flat_graph graph;
         runtime_state runtime;
-        [[no_unique_address]] typename kit_customizer<executor_type>::template latch_type<5, 7> self_delete_latch;
+        [[no_unique_address]] self_delete_latch<executor_type, flat_graph> self_delete_latch;
     };
 } // namespace mess

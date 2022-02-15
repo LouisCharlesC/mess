@@ -31,10 +31,10 @@ namespace mess
             return list<first_indexes..., second_indexes...>();
         }
 
-        template <typename first_list, typename second_list, typename... other_lists>
-        static constexpr auto concatenate(first_list, second_list, other_lists...)
+        template <typename first_list, typename second_list, typename third_list, typename... other_lists>
+        static constexpr auto concatenate(first_list, second_list, third_list, other_lists...)
         {
-            return concatenate(concatenate(first_list(), second_list()), other_lists()...);
+            return concatenate(concatenate(first_list(), second_list()), third_list(), other_lists()...);
         }
     } // namespace details
 

@@ -31,7 +31,7 @@ namespace mess
         using list = details::list<indexes...>;
     };
     template <std::size_t... indexes>
-    struct await_predecessors : details::list<indexes...>
+    struct other_predecessors : details::list<indexes...>
     {
         using list = details::list<indexes...>;
     };
@@ -44,7 +44,7 @@ namespace mess
     template <std::size_t... indexes>
     constexpr bool is_arg_predecessors_type(arg_predecessors<indexes...>) { return true; }
     template <std::size_t... indexes>
-    constexpr bool is_await_predecessors_type(await_predecessors<indexes...>) { return true; }
+    constexpr bool is_other_predecessors_type(other_predecessors<indexes...>) { return true; }
     template <std::size_t... indexes>
     constexpr bool is_successors_type(successors<indexes...>) { return true; }
 } // namespace mess
