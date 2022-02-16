@@ -17,27 +17,12 @@
 
 namespace mess
 {
-    namespace details
+    template <std::size_t... first_indexes, std::size_t... second_indexes>
+    static constexpr details::list<first_indexes..., second_indexes...> operator+(details::list<first_indexes...>, details::list<second_indexes...>)
     {
-        template <typename list>
-        static consteval auto concatenate(list)
-        {
-            return list();
-        }
-
-        template <std::size_t... first_indexes, std::size_t... second_indexes>
-        static constexpr auto concatenate(list<first_indexes...>, list<second_indexes...>)
-        {
-            return list<first_indexes..., second_indexes...>();
-        }
-
-        template <typename first_list, typename second_list, typename third_list, typename... other_lists>
-        static constexpr auto concatenate(first_list, second_list, third_list, other_lists...)
-        {
-            return concatenate(concatenate(first_list(), second_list()), third_list(), other_lists()...);
-        }
-    } // namespace details
+        return {};
+    }
 
     template <typename... lists>
-    using concatenate = decltype(details::concatenate(lists()...));
+    using concatenate = decltype((lists() + ...));
 } // namespace mess

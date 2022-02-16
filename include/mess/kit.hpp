@@ -66,7 +66,7 @@ namespace mess
     {
     };
 
-    namespace
+    namespace details
     {
         template <typename executor_type, typename value_type, std::size_t... predecessors>
         auto make_kit(details::list<predecessors...>) noexcept
@@ -96,11 +96,11 @@ namespace mess
         {
             return make_self_delete_latch<executor_type>(leaf_nodes<flat_graph, indexes...>());
         }
-    } // namespace
+    } // namespace details
 
     template <typename executor_type, typename flat_graph>
-    using runtime_state = decltype(make_runtime_state<executor_type, flat_graph>(std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
+    using runtime_state = decltype(details::make_runtime_state<executor_type, flat_graph>(std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
 
     template <typename executor_type, typename flat_graph>
-    using self_delete_latch = decltype(make_self_delete_latch<executor_type, flat_graph>(std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
+    using self_delete_latch = decltype(details::make_self_delete_latch<executor_type, flat_graph>(std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
 } // namespace mess
