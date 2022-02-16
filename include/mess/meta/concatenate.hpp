@@ -11,18 +11,17 @@
 
 #pragma once
 
-#include <mess/meta/list.hpp>
-
 #include <cstdint>
+#include <utility>
 
 namespace mess
 {
     template <std::size_t... first_indexes, std::size_t... second_indexes>
-    static constexpr details::list<first_indexes..., second_indexes...> operator+(details::list<first_indexes...>, details::list<second_indexes...>)
+    static constexpr std::index_sequence<first_indexes..., second_indexes...> operator+(std::index_sequence<first_indexes...>, std::index_sequence<second_indexes...>)
     {
         return {};
     }
 
-    template <typename... lists>
-    using concatenate = decltype((lists() + ...));
+    template <typename... sequences>
+    using concatenate = decltype((sequences() + ...));
 } // namespace mess

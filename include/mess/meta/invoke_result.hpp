@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <mess/meta/list.hpp>
+#include <mess/meta/sequences.hpp>
 
 #include <cstdint>
 #include <tuple>
@@ -21,6 +21,9 @@ namespace mess
 {
     namespace details
     {
+        template <typename flat_graph, std::size_t index, std::size_t... arg_predecessors_index>
+        static constexpr auto get_invoke_result(mess::arg_predecessors<arg_predecessors_index...>);
+
         template <typename flat_graph, std::size_t index>
         using invoke_result = decltype(get_invoke_result<flat_graph, index>(typename std::tuple_element_t<index, flat_graph>::arg_predecessors()));
 

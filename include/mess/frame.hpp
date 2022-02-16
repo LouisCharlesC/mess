@@ -12,7 +12,7 @@
 #pragma once
 
 #include <mess/kit.hpp>
-#include <mess/meta/list.hpp>
+#include <mess/meta/sequences.hpp>
 
 #include <tuple>
 #include <utility>
@@ -47,12 +47,9 @@ namespace mess
         {
         }
 
-        // TODO: static check node types and flat_graph
-        using runtime_state = runtime_state<executor_type, flat_graph>;
-
         executor_type &executor;
         flat_graph graph;
-        runtime_state runtime;
+        runtime_state<executor_type, flat_graph> runtime;
         [[no_unique_address]] self_delete_latch<executor_type, flat_graph> self_delete_latch;
     };
 } // namespace mess

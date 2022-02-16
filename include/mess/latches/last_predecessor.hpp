@@ -9,9 +9,6 @@
  *
  */
 
-#include <mess/meta/is_last.hpp>
-#include <mess/meta/list.hpp>
-
 #include <cstdint>
 
 namespace mess
@@ -22,7 +19,8 @@ namespace mess
         template <std::size_t notifying>
         constexpr bool notify_and_check_if_ready() const noexcept
         {
-            return is_last<notifying>(list<predecessors...>());
+            constexpr bool is_last = notifying == (predecessors, ...);
+            return is_last;
         }
     };
 } // namespace mess

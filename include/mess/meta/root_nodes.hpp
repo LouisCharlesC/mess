@@ -22,9 +22,9 @@ namespace mess
     template <typename flat_graph, std::size_t index>
     constexpr bool is_root()
     {
-        return std::tuple_element_t<index, flat_graph>::all_predecessors::empty;
+        return std::tuple_element_t<index, flat_graph>::all_predecessors::size() == 0;
     }
 
     template <typename flat_graph, std::size_t... indexes>
-    using root_nodes = concatenate<std::conditional_t<is_root<flat_graph, indexes>(), details::list<indexes>, details::list<>>...>;
+    using root_nodes = concatenate<std::conditional_t<is_root<flat_graph, indexes>(), std::index_sequence<indexes>, std::index_sequence<>>...>;
 } // namespace mess

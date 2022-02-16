@@ -11,9 +11,8 @@
 
 #pragma once
 
-#include <mess/meta/list.hpp>
-
 #include <cstdint>
+#include <utility>
 
 namespace mess
 {
@@ -26,12 +25,12 @@ namespace mess
         }
 
         template <std::size_t... indexes, std::size_t... super_indexes>
-        static constexpr bool contains(list<indexes...>, list<super_indexes...>)
+        static constexpr bool contains(std::index_sequence<indexes...>, index_sequence<super_indexes...>)
         {
             return (contains<indexes, super_indexes...> && ...);
         }
     } // namespace details
 
-    template <typename list, typename super_list>
-    using contains = decltype(details::contains(list(), super_list()));
+    template <typename sequence, typename super_sequence>
+    using contains = decltype(details::contains(sequence(), super_sequence()));
 } // namespace mess

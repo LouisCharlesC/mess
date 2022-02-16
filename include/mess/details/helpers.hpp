@@ -13,6 +13,7 @@
 
 #include <mess/frame.hpp>
 #include <mess/meta/leaf_nodes.hpp>
+#include <mess/meta/root_nodes.hpp>
 
 #include <cstdint>
 #include <memory>
@@ -23,13 +24,6 @@ namespace mess
 {
     namespace details
     {
-        template <std::size_t index, typename flat_graph>
-        using arg_predecessors = typename std::tuple_element_t<index, flat_graph>::arg_predecessors;
-        template <std::size_t index, typename flat_graph>
-        using all_predecessors = typename std::tuple_element_t<index, flat_graph>::all_predecessors;
-        template <std::size_t index, typename flat_graph>
-        using successors = typename std::tuple_element_t<index, flat_graph>::successors;
-
         template <bool is_self_delete>
         struct self_delete
         {
@@ -58,18 +52,16 @@ namespace mess
                 }
             }
 
-            template <std::size_t index, typename executor_type, typename flat_graph, std::size_t... arg_predecessors_index>
-            static void fetch_args_and_execute(frame_type<executor_type, flat_graph> &frame, mess::arg_predecessors<arg_predecessors_index...>)
-            {
-                // TODO: should executor return bool to indicate it was stopped ? or be polled with is_stop_requested() or something
-                frame.executor.execute([&frame]()
-                                       { thunk<index>(frame, *std::get<arg_predecessors_index>(frame.runtime).result...); });
-            }
-
             template <std::size_t index, typename executor_type, typename flat_graph>
             static void fetch_args_and_execute(frame_type<executor_type, flat_graph> &frame)
             {
-                fetch_args_and_execute<index>(frame, arg_predecessors<index, flat_graph>());
+                [&frame]<std::size_t... arg_predecessors_index>(std::index_sequence<arg_predecessors_index...>)
+                {
+                    // TODO: should executor return bool to indicate it was stopped ? or be polled with is_stop_requested() or something
+                    frame.executor.execute([&frame]()
+                                           { thunk<index>(frame, *std::get<arg_predecessors_index>(frame.runtime).result...); });
+                }
+                (typename std::tuple_element_t<index, flat_graph>::arg_predecessors());
             }
 
             template <std::size_t notifying, std::size_t notified, typename executor_type, typename flat_graph>
@@ -81,37 +73,28 @@ namespace mess
                 }
             }
 
-            template <std::size_t notifying, typename executor_type, typename flat_graph, std::size_t... successors_index>
-            static void notify_and_execute_ready_successors(frame_type<executor_type, flat_graph> &frame, mess::successors<successors_index...>)
-            {
-                (notify_and_execute_if_ready<notifying, successors_index>(frame), ...);
-            }
-
-            template <std::size_t notifying, typename executor_type, typename flat_graph>
+            template <std::size_t notifier, typename executor_type, typename flat_graph>
             static void notify_and_execute_ready_successors(frame_type<executor_type, flat_graph> &frame)
             {
-                notify_and_execute_ready_successors<notifying>(frame, successors<notifying, flat_graph>());
-            }
-
-            template <std::size_t index, typename executor_type, typename flat_graph>
-            static void execute_if_root(frame_type<executor_type, flat_graph> &frame)
-            {
-                if constexpr (all_predecessors<index, flat_graph>::empty)
+                [&frame]<std::size_t... successors_index>(std::index_sequence<successors_index...>)
                 {
-                    fetch_args_and_execute<index>(frame);
+                    (notify_and_execute_if_ready<notifier, successors_index>(frame), ...);
                 }
-            }
-
-            template <typename executor_type, typename flat_graph, std::size_t... indexes>
-            static void execute_root_nodes(frame_type<executor_type, flat_graph> &frame, std::index_sequence<indexes...>)
-            {
-                (execute_if_root<indexes>(frame), ...);
+                (typename std::tuple_element_t<notifier, flat_graph>::successors());
             }
 
             template <typename executor_type, typename flat_graph>
             static void execute_root_nodes(frame_type<executor_type, flat_graph> &frame)
             {
-                execute_root_nodes(frame, std::make_index_sequence<std::tuple_size_v<flat_graph>>());
+                [&frame]<std::size_t... indexes>(std::index_sequence<indexes...>)
+                {
+                    [&frame]<std::size_t... root_nodes_index>(std::index_sequence<root_nodes_index...>)
+                    {
+                        (fetch_args_and_execute<root_nodes_index>(frame), ...);
+                    }
+                    (root_nodes<flat_graph, indexes...>());
+                }
+                (std::make_index_sequence<std::tuple_size_v<flat_graph>>());
             }
         };
     } // namespace details

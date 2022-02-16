@@ -1,5 +1,5 @@
 /**
- * @file list.hpp
+ * @file sequences.hpp
  * @author L.-C. C. (me@domain.com)
  * @brief
  * @version 0.1
@@ -12,33 +12,21 @@
 #pragma once
 
 #include <cstdint>
+#include <utility>
 
 namespace mess
 {
-    namespace details
-    {
-        template <std::size_t... indexes>
-        struct list
-        {
-            static constexpr std::size_t count = sizeof...(indexes);
-            static constexpr bool empty = count == 0;
-        };
-    } // namespace details
-
     template <std::size_t... indexes>
-    struct arg_predecessors : details::list<indexes...>
+    struct arg_predecessors : std::index_sequence<indexes...>
     {
-        using list = details::list<indexes...>;
     };
     template <std::size_t... indexes>
-    struct other_predecessors : details::list<indexes...>
+    struct other_predecessors : std::index_sequence<indexes...>
     {
-        using list = details::list<indexes...>;
     };
     template <std::size_t... indexes>
-    struct successors : details::list<indexes...>
+    struct successors : std::index_sequence<indexes...>
     {
-        using list = details::list<indexes...>;
     };
 
     template <std::size_t... indexes>

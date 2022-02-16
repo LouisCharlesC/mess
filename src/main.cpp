@@ -64,7 +64,7 @@ int main()
                                   mess::make_node<mess::arg_predecessors<4>, mess::other_predecessors<>, mess::successors<>>(func_1));
     // auto graph = mess::make_graph(mess::make_node<mess::arg_predecessors<>, mess::other_predecessors<>, mess::successors<>>(func_0));
 
-    using executor_type = mess::std_thread_executor;
+    using executor_type = mess::inline_executor;
     using frame_type = mess::frame_type<executor_type, decltype(graph)>;
     executor_type executor;
     frame_type frame(executor, graph);

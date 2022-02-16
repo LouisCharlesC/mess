@@ -16,7 +16,7 @@
 #include <mess/meta/concatenate.hpp>
 #include <mess/meta/invoke_result.hpp>
 #include <mess/meta/leaf_nodes.hpp>
-#include <mess/meta/list.hpp>
+#include <mess/meta/sequences.hpp>
 
 #include <cstdint>
 #include <tuple>
@@ -68,15 +68,14 @@ namespace mess
 
     namespace details
     {
-        template <typename executor_type, typename value_type, std::size_t... predecessors>
-        auto make_kit(details::list<predecessors...>) noexcept
-        {
-            return kit<executor_type, value_type, predecessors...>();
-        }
         template <typename executor_type, typename value_type, typename node_type>
         auto make_kit() noexcept
         {
-            return make_kit<executor_type, value_type>(typename node_type::all_predecessors());
+            return []<std::size_t... predecessors>(std::index_sequence<predecessors...>)
+            {
+                return kit<executor_type, value_type, predecessors...>();
+            }
+            (typename node_type::all_predecessors());
         }
 
         template <typename executor_type, typename flat_graph, std::size_t... indexes>
@@ -85,16 +84,14 @@ namespace mess
             return std::tuple<decltype(make_kit<executor_type, details::invoke_result<flat_graph, indexes>, std::tuple_element_t<indexes, flat_graph>>())...>();
         }
 
-        template <typename executor_type, std::size_t... indexes>
-        auto make_self_delete_latch(details::list<indexes...>) noexcept
-        {
-            return typename kit_customizer<executor_type>::template latch_type<indexes...>();
-        }
-
         template <typename executor_type, typename flat_graph, std::size_t... indexes>
         auto make_self_delete_latch(std::index_sequence<indexes...>) noexcept
         {
-            return make_self_delete_latch<executor_type>(leaf_nodes<flat_graph, indexes...>());
+            return []<std::size_t... leaf_nodes_index>(std::index_sequence<leaf_nodes_index...>)
+            {
+                return typename kit_customizer<executor_type>::template latch_type<leaf_nodes_index...>();
+            }
+            (leaf_nodes<flat_graph, indexes...>());
         }
     } // namespace details
 
