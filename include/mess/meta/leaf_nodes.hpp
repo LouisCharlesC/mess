@@ -20,11 +20,8 @@
 namespace mess
 {
     template <typename flat_graph, std::size_t index>
-    constexpr bool is_leaf()
-    {
-        return std::tuple_element_t<index, flat_graph>::successors::size() == 0;
-    }
+    constexpr bool is_leaf = std::tuple_element_t<index, flat_graph>::successors::size() == 0;
 
     template <typename flat_graph, std::size_t... indexes>
-    using leaf_nodes = concatenate<std::conditional_t<is_leaf<flat_graph, indexes>(), std::index_sequence<indexes>, std::index_sequence<>>...>;
+    using leaf_nodes = concatenate<std::conditional_t<is_leaf<flat_graph, indexes>, std::index_sequence<indexes>, std::index_sequence<>>...>;
 } // namespace mess

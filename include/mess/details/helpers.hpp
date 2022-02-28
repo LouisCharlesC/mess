@@ -30,24 +30,27 @@ namespace mess
             template <std::size_t index, typename executor_type, typename flat_graph, typename... args_type>
             static void thunk(frame_type<executor_type, flat_graph> &frame, const args_type &...args) noexcept
             {
-                // Do not store the result if there are no successors interested in it.
-                if constexpr (!is_leaf<flat_graph, index>())
+                if constexpr (std::is_same_v<details::invoke_result<flat_graph, index>, void>)
                 {
-                    // TODO: use std::invoke
-                    std::get<index>(frame.runtime).result = std::get<index>(frame.graph).invocable(args...);
-
-                    notify_and_execute_ready_successors<index>(frame);
+                    // Do not try to store the result if it is void.
+                    std::get<index>(frame.graph).invocable(args...);
                 }
                 else
                 {
-                    std::get<index>(frame.graph).invocable(args...);
+                    std::get<index>(frame.runtime).result = std::get<index>(frame.graph).invocable(args...);
+                }
 
-                    if constexpr (is_self_delete)
+                if constexpr (!is_leaf<flat_graph, index>)
+                {
+                    // Non-leaf nodes notify their successors.
+                    notify_and_execute_ready_successors<index>(frame);
+                }
+                else if (is_self_delete)
+                {
+                    // Leaf nodes notify the self_deleter if needed.
+                    if (frame.self_deleter.template notify_and_check_if_ready<index>())
                     {
-                        if (frame.self_delete_latch.template notify_and_check_if_ready<index>())
-                        {
-                            delete (std::addressof(frame));
-                        }
+                        delete (std::addressof(frame));
                     }
                 }
             }

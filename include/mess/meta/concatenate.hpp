@@ -16,8 +16,8 @@
 
 namespace mess
 {
-    template <std::size_t... first_indexes, std::size_t... second_indexes>
-    static constexpr std::index_sequence<first_indexes..., second_indexes...> operator+(std::index_sequence<first_indexes...>, std::index_sequence<second_indexes...>)
+    template <std::size_t... lhs_indexes, std::size_t... rhs_indexes>
+    constexpr std::index_sequence<lhs_indexes..., rhs_indexes...> operator+(std::index_sequence<lhs_indexes...>, std::index_sequence<rhs_indexes...>)
     {
         return {};
     }

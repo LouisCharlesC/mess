@@ -9,6 +9,8 @@
  *
  */
 
+#pragma once
+
 #include <cstdint>
 
 namespace mess
@@ -19,8 +21,13 @@ namespace mess
         template <std::size_t notifying>
         constexpr bool notify_and_check_if_ready() const noexcept
         {
-            constexpr bool is_last = notifying == (predecessors, ...);
-            return is_last;
+            return is_last<notifying>;
         }
+
+    private:
+        // (indexes, ...) uses the comma operator to discard all indexes but the last.
+        // Thanks https://www.foonathan.net/2020/05/fold-tricks/
+        template <std::size_t index>
+        static constexpr bool is_last = index == (predecessors, ...);
     };
 } // namespace mess

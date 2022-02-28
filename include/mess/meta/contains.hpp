@@ -19,18 +19,18 @@ namespace mess
     namespace details
     {
         template <std::size_t index, std::size_t... super_indexes>
-        static constexpr bool contains()
+        consteval bool contains()
         {
             return ((index == super_indexes) || ...);
         }
 
         template <std::size_t... indexes, std::size_t... super_indexes>
-        static constexpr bool contains(std::index_sequence<indexes...>, index_sequence<super_indexes...>)
+        consteval bool contains(std::index_sequence<indexes...>, std::index_sequence<super_indexes...>)
         {
-            return (contains<indexes, super_indexes...> && ...);
+            return (contains<indexes, super_indexes...>() && ...);
         }
     } // namespace details
 
     template <typename sequence, typename super_sequence>
-    using contains = decltype(details::contains(sequence(), super_sequence()));
+    constexpr bool contains = details::contains(sequence(), super_sequence());
 } // namespace mess

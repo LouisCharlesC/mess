@@ -31,8 +31,8 @@ namespace mess
 
         using invocable_type = invocable_type_arg;
         using arg_predecessors = arg_predecessors_type;
-        using all_predecessors = concatenate<arg_predecessors_type, other_predecessors_type>;
-        // using ordered_predecessors = ;
+        using other_predecessors = other_predecessors_type;
+        using unordered_predecessors = concatenate<arg_predecessors_type, other_predecessors_type>;
         using successors = successors_type;
 
         invocable_type invocable;
@@ -50,6 +50,6 @@ namespace mess
         executor_type &executor;
         flat_graph graph;
         runtime_state<executor_type, flat_graph> runtime;
-        [[no_unique_address]] self_delete_latch<executor_type, flat_graph> self_delete_latch;
+        [[no_unique_address]] self_delete_latch<executor_type, flat_graph> self_deleter;
     };
 } // namespace mess
