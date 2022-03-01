@@ -34,12 +34,12 @@ namespace mess
     template <typename executor_type, typename... nodes_type>
     void run(frame_type<executor_type, flat_graph<nodes_type...>> &frame)
     {
-        details::self_delete<false>::execute_root_nodes(frame);
+        details::invoker<false>::execute_root_nodes(frame);
     }
 
     template <typename executor_type, typename... nodes_type>
     void run(std::unique_ptr<frame_type<executor_type, flat_graph<nodes_type...>>> ptr)
     {
-        details::self_delete<true>::execute_root_nodes(*ptr.release());
+        details::invoker<true>::execute_root_nodes(*ptr.release());
     }
 } // namespace mess

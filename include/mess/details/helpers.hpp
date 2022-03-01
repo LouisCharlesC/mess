@@ -25,7 +25,7 @@ namespace mess
     namespace details
     {
         template <bool is_self_delete>
-        struct self_delete
+        struct invoker
         {
             template <std::size_t index, typename executor_type, typename flat_graph, typename... args_type>
             static void thunk(frame_type<executor_type, flat_graph> &frame, const args_type &...args) noexcept
