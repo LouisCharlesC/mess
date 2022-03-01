@@ -10,7 +10,7 @@
  */
 
 #include "mess/mess.hpp"
-#include "mess/executors/std_thread.hpp"
+#include "mess/schedulers/std_thread.hpp"
 
 #include <atomic>
 #include <chrono>
@@ -70,19 +70,18 @@ int main()
                                   mess::make_node<mess::arg_predecessors<4>, mess::other_predecessors<>, mess::successors<>>(func_1<8>));
     // auto graph = mess::make_graph(mess::make_node<mess::arg_predecessors<>, mess::other_predecessors<>, mess::successors<>>(func_0));
 
-    // using executor_type = mess::inline_executor;
-    using executor_type = mess::std_thread_executor;
-    using frame_type = mess::frame_type<executor_type, decltype(graph)>;
-    executor_type executor;
-    frame_type frame(executor, graph);
+    // using scheduler_type = mess::inline_scheduler;
+    using scheduler_type = mess::std_thread_scheduler;
+    using frame_type = mess::frame_type<scheduler_type, decltype(graph)>;
+    scheduler_type scheduler;
+    frame_type frame(scheduler, graph);
 
     mess::run(frame);
-    executor.join();
-    mess::run(std::make_unique<frame_type>(executor, graph));
+    scheduler.join();
+    mess::run(std::make_unique<frame_type>(scheduler, graph));
 }
 
 // if throw, catch and quit, but clean-up must be run, even others branches must
-// replace executor by scheduler
 // test the hell out of this // check for constexpr stuff // check inline scheduler actually is like inline code
 // Set CI back up
 // rerun to reuse frame ?
@@ -90,4 +89,4 @@ int main()
 // frame should be mostly private, and only allow access to result (then friend every function that needs access), that would be neat!
 // if all successors only have one predecessor, do not store the result and feed it directly ?
 // remove input successors? probably not
-// executor can tell if it was stopped
+// scheduler can tell if it was stopped

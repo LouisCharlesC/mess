@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <mess/executors/inline.hpp>
+#include <mess/schedulers/inline.hpp>
 #include <mess/latches/atomic_countdown.hpp>
 #include <mess/latches/last_predecessor.hpp>
 
@@ -19,7 +19,7 @@
 
 namespace mess
 {
-    template <typename executor_type>
+    template <typename scheduler_type>
     struct kit_customizer
     {
         template <std::size_t... predecessors>
@@ -29,7 +29,7 @@ namespace mess
     };
 
     template <>
-    struct kit_customizer<inline_executor>
+    struct kit_customizer<inline_scheduler>
     {
         template <std::size_t... predecessors>
         using latch_type = last_predecessor_latch<predecessors...>;

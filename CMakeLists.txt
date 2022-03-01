@@ -1,19 +1,17 @@
 cmake_minimum_required(VERSION 3.9.2)
 
-project(mess VERSION 0.4.0 LANGUAGES CXX)
+project(mess VERSION 0.5.0 LANGUAGES CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 include(Warnings)
-include(Submodules)
 
 find_package(Threads REQUIRED)
-add_subdirectory(extern/taocpp-sequences)
 
-add_library(${PROJECT_NAME} src/executors/std_thread.cpp)
+add_library(${PROJECT_NAME} src/schedulers/std_thread.cpp)
 target_include_directories(${PROJECT_NAME} PUBLIC include)
-target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads taocpp::sequences PRIVATE -fsanitize=undefined,address -fno-omit-frame-pointer)
+target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads PRIVATE -fsanitize=undefined,address -fno-omit-frame-pointer)
 target_set_warnings(${PROJECT_NAME} ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 set_target_properties(
 	${PROJECT_NAME}
@@ -34,4 +32,4 @@ set_target_properties(
 		CXX_EXTENSIONS NO
 )
 
-# add_subdirectory(tests)
+add_subdirectory(tests)

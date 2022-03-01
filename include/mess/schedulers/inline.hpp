@@ -15,10 +15,10 @@
 
 namespace mess
 {
-    struct inline_executor
+    struct inline_scheduler
     {
         template <typename F>
-        inline constexpr void execute(F &&f) const
+        inline constexpr void schedule(F &&f) const
         {
             std::forward<F>(f)();
         }

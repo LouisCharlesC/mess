@@ -31,15 +31,15 @@ namespace mess
         return std::make_tuple(std::forward<nodes_type>(nodes)...);
     }
 
-    template <typename executor_type, typename... nodes_type>
-    void run(frame_type<executor_type, flat_graph<nodes_type...>> &frame)
+    template <typename scheduler_type, typename... nodes_type>
+    void run(frame_type<scheduler_type, flat_graph<nodes_type...>> &frame)
     {
-        details::invoker<false>::execute_root_nodes(frame);
+        details::invoker<false>::scheduler_root_nodes(frame);
     }
 
-    template <typename executor_type, typename... nodes_type>
-    void run(std::unique_ptr<frame_type<executor_type, flat_graph<nodes_type...>>> ptr)
+    template <typename scheduler_type, typename... nodes_type>
+    void run(std::unique_ptr<frame_type<scheduler_type, flat_graph<nodes_type...>>> ptr)
     {
-        details::invoker<true>::execute_root_nodes(*ptr.release());
+        details::invoker<true>::scheduler_root_nodes(*ptr.release());
     }
 } // namespace mess

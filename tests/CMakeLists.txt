@@ -1,9 +1,8 @@
 include(CTest)
 find_package(doctest CONFIG REQUIRED)
 
-set(tests_SRC tests_main.cpp tests.cpp)
-add_executable(tests ${tests_SRC})
-target_link_libraries(tests doctest::doctest mess)
+add_executable(tests tests_main.cpp tests.cpp)
+target_link_libraries(tests PUBLIC doctest::doctest mess PRIVATE -fsanitize=undefined,address -fno-omit-frame-pointer)
 target_set_warnings(tests ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 set_target_properties(
 	tests

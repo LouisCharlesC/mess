@@ -38,18 +38,18 @@ namespace mess
         invocable_type invocable;
     };
 
-    template <typename executor_type, typename flat_graph>
+    template <typename scheduler_type, typename flat_graph>
     struct frame_type
     {
         template <typename flat_graph_arg>
-        frame_type(executor_type &executor, flat_graph_arg &&graph) : executor(executor),
-                                                                      graph(std::forward<flat_graph_arg>(graph))
+        frame_type(scheduler_type &scheduler, flat_graph_arg &&graph) : scheduler(scheduler),
+                                                                        graph(std::forward<flat_graph_arg>(graph))
         {
         }
 
-        executor_type &executor;
+        scheduler_type &scheduler;
         flat_graph graph;
-        runtime_state<executor_type, flat_graph> runtime;
-        [[no_unique_address]] self_delete_latch<executor_type, flat_graph> self_deleter;
+        runtime_state<scheduler_type, flat_graph> runtime;
+        [[no_unique_address]] self_delete_latch<scheduler_type, flat_graph> self_deleter;
     };
 } // namespace mess

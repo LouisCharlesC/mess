@@ -18,26 +18,26 @@
 
 namespace mess
 {
-    class std_thread_executor
+    class std_thread_scheduler
     {
     public:
-        ~std_thread_executor() noexcept;
+        ~std_thread_scheduler() noexcept;
 
         template <typename F>
-        void execute(F f)
+        void schedule(F f)
         {
-            ++_running;
+            ++_pending;
             std::thread([f, this]()
                         {
                             f();
-                            --this->_running;
-                            this->_running.notify_one(); })
+                            --this->_pending;
+                            this->_pending.notify_one(); })
                 .detach();
         }
 
         void join() const noexcept;
 
     private:
-        std::atomic<std::size_t> _running = ATOMIC_VAR_INIT(0);
+        std::atomic<std::size_t> _pending = ATOMIC_VAR_INIT(0);
     };
 } // namespace mess
