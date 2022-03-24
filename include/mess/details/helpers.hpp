@@ -30,7 +30,7 @@ namespace mess
             template <std::size_t index, typename scheduler_type, typename flat_graph, typename... args_type>
             static void thunk(frame_type<scheduler_type, flat_graph> &frame, const args_type &...args) noexcept
             {
-                if constexpr (std::is_same_v<details::invoke_result<flat_graph, index>, void>)
+                if constexpr (std::is_same_v<details::invoke_result_t<flat_graph, index>, void>)
                 {
                     // Do not try to store the result if it is void.
                     std::get<index>(frame.graph).invocable(args...);

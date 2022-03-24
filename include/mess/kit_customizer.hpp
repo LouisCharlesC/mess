@@ -15,7 +15,9 @@
 #include <mess/latches/atomic_countdown.hpp>
 #include <mess/latches/last_predecessor.hpp>
 
+#include <functional>
 #include <optional>
+#include <type_traits>
 
 namespace mess
 {
@@ -24,8 +26,11 @@ namespace mess
     {
         template <std::size_t... predecessors>
         using latch_type = atomic_countdown_latch<predecessors...>;
+
         template <typename value_type>
-        using result_type = std::optional<value_type>;
+        using result_type = std::conditional_t<std::is_lvalue_reference_v<value_type>,
+                                               std::optional<std::reference_wrapper<std::remove_reference_t<value_type>>>,
+                                               std::optional<value_type>>;
     };
 
     template <>
@@ -33,7 +38,10 @@ namespace mess
     {
         template <std::size_t... predecessors>
         using latch_type = last_predecessor_latch<predecessors...>;
+
         template <typename value_type>
-        using result_type = std::optional<value_type>;
+        using result_type = std::conditional_t<std::is_lvalue_reference_v<value_type>,
+                                               std::optional<std::reference_wrapper<std::remove_reference_t<value_type>>>,
+                                               std::optional<value_type>>;
     };
 } // namespace mess

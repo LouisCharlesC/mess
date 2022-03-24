@@ -18,7 +18,7 @@ namespace mess
     struct inline_scheduler
     {
         template <typename F>
-        inline constexpr void schedule(F &&f) const
+        constexpr void schedule(F &&f) const
         {
             std::forward<F>(f)();
         }
