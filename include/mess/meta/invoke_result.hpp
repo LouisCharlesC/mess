@@ -29,7 +29,7 @@ namespace mess
         template <typename flat_graph, std::size_t index, std::size_t... arg_predecessors_index>
         struct invoke_result<flat_graph, index, mess::arg_predecessors<arg_predecessors_index...>>;
 
-        // Convinience alias to the type defined in the specialization.
+        // Convenience alias to the type defined in the specialization.
         template <typename flat_graph, std::size_t index>
         using invoke_result_t = typename invoke_result<flat_graph, index, typename std::tuple_element_t<index, flat_graph>::arg_predecessors>::type;
 

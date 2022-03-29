@@ -2,7 +2,8 @@ include(CTest)
 find_package(doctest CONFIG REQUIRED)
 
 add_executable(helloworld helloworld/withmess/helloworld.cpp)
-target_link_libraries(helloworld PRIVATE mess)
+target_include_directories(helloworld PUBLIC $<TARGET_PROPERTY:mess,INCLUDE_DIRECTORIES>)
+target_compile_options (helloworld PUBLIC -fno-exceptions) # TODO: remove this when everything is nicely noexcept.
 target_set_warnings(helloworld ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 set_target_properties(
 	helloworld

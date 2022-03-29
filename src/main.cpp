@@ -94,10 +94,10 @@ int main()
 
 // will we have to use a meta library to make things easier to understand ?
 
-// noexcept everything, needed for helloworld test.
 // Set CI back up
 // check for constexpr stuff
 // scheduler actually is like inline code if throw, catch and quit, but clean-up must be run, even others branches must
+// noexcept everything, if exceptions are handle from the previous task.
 // Rerun to reuse frame ?
 // comment stuff ? better sort between details or not ? try to hide stuff more.
 // frame should be mostly private, and only allow access to result (then friend every function that needs access), that would be neat!

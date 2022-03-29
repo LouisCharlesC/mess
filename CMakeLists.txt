@@ -5,6 +5,7 @@ project(mess VERSION 0.5.0 LANGUAGES CXX)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
+include(DocTarget)
 include(Warnings)
 
 find_package(Threads REQUIRED)

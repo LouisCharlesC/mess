@@ -105,3 +105,7 @@ The goal of *mess* is to provide dataflow functionality, and only this, without 
 
 * Compilation time: there is some amount of meta-programming involved in *mess*, but not that much. Still, this slows down compilation.
 * Static structure: with *mess*, you cannot add or remove subscribers or callbacks on-the-fly. *mess* only lets you define the **static** structure of you program. I find this to be totally acceptable: a program always has a basic static structure. Some programs have a dynamic structure *on top of the static structure*. *mess* takes case of the static part and *let's you build the dynamic part* if you need it, anyway you like. That way, you only pay the cost of a dynamic framework for those parts of your program that benefit from the added flexibiity.
+
+# Acknowledgment
+Thanks to all contributors, issue raisers and stargazers!
+Most cmake code comes from this repo: https://github.com/bsamseth/cpp-project and Craig Scott's CppCon 2019 talk: Deep CMake for Library Authors. Many thanks to the authors!
