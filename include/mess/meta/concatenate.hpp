@@ -16,12 +16,20 @@
 
 namespace mess
 {
+    template <std::size_t... indexes>
+    struct mess_sequence
+    {
+        using std_sequence = std::index_sequence<indexes...>;
+
+        mess_sequence(std::index_sequence<indexes...>);
+    };
+
     template <std::size_t... lhs_indexes, std::size_t... rhs_indexes>
-    constexpr std::index_sequence<lhs_indexes..., rhs_indexes...> operator+(std::index_sequence<lhs_indexes...>, std::index_sequence<rhs_indexes...>)
+    constexpr mess_sequence<lhs_indexes..., rhs_indexes...> operator+(mess_sequence<lhs_indexes...>, mess_sequence<rhs_indexes...>)
     {
         return {};
     }
 
     template <typename... sequences>
-    using concatenate = decltype((sequences() + ...));
+    using concatenate = typename decltype((mess_sequence(sequences()) + ...))::std_sequence;
 } // namespace mess
