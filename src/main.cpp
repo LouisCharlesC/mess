@@ -92,15 +92,14 @@ int main()
   mess::run(std::make_unique<frame_type>(scheduler, graph));
 }
 
-// will we have to use a meta library to make things easier to understand ?
-
 // Set CI back up
 // check for constexpr stuff
 // scheduler actually is like inline code if throw, catch and quit, but clean-up must be run, even others branches must
 // noexcept everything, if exceptions are handle from the previous task.
-// Rerun to reuse frame ?
+// hide private stuff from documentation, document public stuff.
 // comment stuff ? better sort between details or not ? try to hide stuff more.
+// Rerun to reuse frame ?
 // frame should be mostly private, and only allow access to result (then friend every function that needs access), that would be neat!
 // if all successors only have one predecessor, do not store the result and feed it directly ?
-// remove input successors? probably not
+// remove input successors?
 // scheduler can tell if it was stopped
