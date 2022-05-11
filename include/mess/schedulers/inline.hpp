@@ -15,7 +15,7 @@
 
 namespace mess
 {
-    struct inline_scheduler
+    constexpr struct inline_scheduler_t
     {
         template <typename F>
         constexpr void schedule(F &&f) const
@@ -24,5 +24,5 @@ namespace mess
         }
 
         inline constexpr void join() const noexcept {}
-    };
+    } inline_scheduler;
 } // namespace mess

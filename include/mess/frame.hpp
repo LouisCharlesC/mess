@@ -12,8 +12,10 @@
 #pragma once
 
 #include <mess/kit.hpp>
+#include <mess/meta/leaf_nodes.hpp>
 #include <mess/meta/sequences.hpp>
 
+#include <cassert>
 #include <tuple>
 #include <utility>
 
@@ -49,15 +51,16 @@ namespace mess
   };
 
   template <typename scheduler_type, typename flat_graph>
-  struct frame_type
+  class frame_type
   {
+  public:
     frame_type(scheduler_type &scheduler, flat_graph graph)
-        : scheduler(scheduler), graph(std::move(graph)) {}
+        : _scheduler(scheduler), _graph(std::move(graph)) {}
 
-    scheduler_type &scheduler;
-    flat_graph graph;
-    runtime_state<scheduler_type, flat_graph> runtime;
-    [[no_unique_address]] self_delete_latch<scheduler_type, flat_graph>
-        self_deleter;
+    // private:
+    scheduler_type &_scheduler;
+    [[no_unique_address]] flat_graph _graph;
+    [[no_unique_address]] runtime_state<scheduler_type, flat_graph> _runtime;
+    [[no_unique_address]] leaf_nodes_latch<scheduler_type, flat_graph> _leafs_latch;
   };
 } // namespace mess

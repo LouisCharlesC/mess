@@ -33,11 +33,11 @@ namespace mess
                 if constexpr (std::is_same_v<details::invoke_result_t<flat_graph, index>, void>)
                 {
                     // Do not try to store the result if it is void.
-                    std::get<index>(frame.graph).invocable(args...);
+                    std::get<index>(frame._graph).invocable(args...);
                 }
                 else
                 {
-                    std::get<index>(frame.runtime).result = std::get<index>(frame.graph).invocable(args...);
+                    std::get<index>(frame._runtime).result = std::get<index>(frame._graph).invocable(args...);
                 }
 
                 if constexpr (!is_leaf<flat_graph, index>)
@@ -48,7 +48,7 @@ namespace mess
                 else if (is_self_delete)
                 {
                     // Leaf nodes notify the self_deleter if needed.
-                    if (frame.self_deleter.template notify_and_check_if_ready<index>())
+                    if (frame._leafs_latch.template notify_and_check_if_ready<index>())
                     {
                         delete (std::addressof(frame));
                     }
@@ -61,8 +61,8 @@ namespace mess
                 [&frame]<std::size_t... arg_predecessors_index>(std::index_sequence<arg_predecessors_index...>)
                 {
                     // TODO: should scheduler return bool to indicate it was stopped ? or be polled with is_stop_requested() or something
-                    frame.scheduler.schedule([&frame]()
-                                             { thunk<index>(frame, *std::get<arg_predecessors_index>(frame.runtime).result...); });
+                    frame._scheduler.schedule([&frame]()
+                                              { thunk<index>(frame, *std::get<arg_predecessors_index>(frame._runtime).result...); });
                 }
                 (typename std::tuple_element_t<index, flat_graph>::arg_predecessors());
             }
@@ -70,7 +70,7 @@ namespace mess
             template <std::size_t notifying, std::size_t notified, typename scheduler_type, typename flat_graph>
             static void notify_and_schedule_if_ready(frame_type<scheduler_type, flat_graph> &frame)
             {
-                if (std::get<notified>(frame.runtime).latch.template notify_and_check_if_ready<notifying>())
+                if (std::get<notified>(frame._runtime).latch.template notify_and_check_if_ready<notifying>())
                 {
                     fetch_args_and_schedule<notified>(frame);
                 }

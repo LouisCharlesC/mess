@@ -37,7 +37,7 @@ namespace
         return "Hello, World!";
     }
 
-    // Functions with exotic return types (this one returns a function pointer) also work.
+    // Functions with exotic return types also work. This one returns the std::endl manupulator, which is a function pointer.
     using ManipulatorFnPtr = std::basic_ostream<char, std::char_traits<char>> &(*)(std::basic_ostream<char, std::char_traits<char>> &);
     ManipulatorFnPtr std_endl()
     {
@@ -51,7 +51,13 @@ namespace
 
 int main()
 {
-    // The graph is built here.
+    // The graph is built here. As a reminder:
+    //
+    // std_cout   hello_world
+    //        \    /
+    //        stream    std_endl
+    //             \    /
+    //             stream
     auto print_hello_world = mess::make_graph(
         // Node 0
         mess::make_node<mess::arg_predecessors<>, mess::other_predecessors<>,
@@ -71,9 +77,9 @@ int main()
     // The inline scheduler simply invokes the functions it is given.
     // Replace the next line with "mess::std_thread_scheduler scheduler;" (and don't forget to #include <mess/schedulers/std_thread.hpp>)
     // to get a parallel execution of the graph, where each function is invoked in a separate thread.
-    mess::inline_scheduler scheduler;
+    mess::inline_scheduler_t scheduler;
     // Execute the graph using the specified scheduler.
     mess::run(mess::frame_type(scheduler, print_hello_world));
-    // This is a no-op when using mess::inline_scheduler.
+    // This is a no-op when using mess::inline_scheduler, but will join all spawned threads when using mess::std_thread_scheduler.
     scheduler.join();
 }

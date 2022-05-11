@@ -117,7 +117,7 @@ namespace mess
           std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
 
   template <typename scheduler_type, typename flat_graph>
-  using self_delete_latch =
+  using leaf_nodes_latch =
       decltype(details::make_self_delete_latch<scheduler_type, flat_graph>(
           details::ordered_graph<flat_graph>()));
 } // namespace mess

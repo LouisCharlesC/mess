@@ -13,7 +13,7 @@
 
 #include <mess/mess.hpp>
 
-mess::inline_scheduler scheduler;
+mess::inline_scheduler_t scheduler = mess::inline_scheduler;
 
 template <typename Value>
 struct opaque
@@ -76,79 +76,84 @@ auto v = mess::make_graph(
                     mess::successors<>>(func<int, uint, float>));
 
 auto diamond =
-    mess::make_graph(mess::make_node<mess::arg_predecessors<>,
-                                     mess::other_predecessors<>,
-                                     mess::successors<1, 2>>(func<uint>),
-                     mess::make_node<mess::arg_predecessors<0>,
-                                     mess::other_predecessors<>,
-                                     mess::successors<3>>(func<float, uint>),
-                     mess::make_node<mess::arg_predecessors<>,
-                                     mess::other_predecessors<0>,
-                                     mess::successors<3>>(func<int>),
-                     mess::make_node<mess::arg_predecessors<2>,
-                                     mess::other_predecessors<0>,
-                                     mess::successors<>>(func<int, int>));
+    mess::make_graph(
+        // node 0
+        mess::make_node<mess::arg_predecessors<>,
+                        mess::other_predecessors<>,
+                        mess::successors<1, 2>>(func<uint>),
+        // node 1
+        mess::make_node<mess::arg_predecessors<0>,
+                        mess::other_predecessors<>,
+                        mess::successors<3>>(func<float, uint>),
+        // node 2
+        mess::make_node<mess::arg_predecessors<>,
+                        mess::other_predecessors<0>,
+                        mess::successors<3>>(func<int>),
+        // node 3
+        mess::make_node<mess::arg_predecessors<2>,
+                        mess::other_predecessors<0>,
+                        mess::successors<>>(func<int, int>));
 
 TEST_CASE("One node")
 {
   mess::frame_type frame(scheduler, one_node);
   mess::run(frame);
-  REQUIRE(std::get<0>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<0>(frame.runtime).result, opaque<uint>{1});
+  REQUIRE(std::get<0>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<0>(frame._runtime).result, opaque<uint>{1});
 }
 
 TEST_CASE("Arg")
 {
   mess::frame_type frame(scheduler, two_node_arg);
   mess::run(frame);
-  REQUIRE(std::get<0>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<0>(frame.runtime).result, opaque<uint>{1});
-  REQUIRE(std::get<1>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<1>(frame.runtime).result, opaque<float>{3.f});
+  REQUIRE(std::get<0>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<0>(frame._runtime).result, opaque<uint>{1});
+  REQUIRE(std::get<1>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<1>(frame._runtime).result, opaque<float>{3.f});
 }
 
 TEST_CASE("Other")
 {
   mess::frame_type frame(scheduler, two_node_other);
   mess::run(frame);
-  REQUIRE(std::get<0>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<0>(frame.runtime).result, opaque<uint>{1});
-  REQUIRE(std::get<1>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<1>(frame.runtime).result, opaque<float>{1.f});
+  REQUIRE(std::get<0>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<0>(frame._runtime).result, opaque<uint>{1});
+  REQUIRE(std::get<1>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<1>(frame._runtime).result, opaque<float>{1.f});
 }
 
 TEST_CASE("Unordered")
 {
   mess::frame_type frame(scheduler, two_node_unordered);
   mess::run(frame);
-  REQUIRE(std::get<0>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<0>(frame.runtime).result, opaque<uint>{3});
-  REQUIRE(std::get<1>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<1>(frame.runtime).result, opaque<float>{1.f});
+  REQUIRE(std::get<0>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<0>(frame._runtime).result, opaque<uint>{3});
+  REQUIRE(std::get<1>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<1>(frame._runtime).result, opaque<float>{1.f});
 }
 
 TEST_CASE("V graph")
 {
   mess::frame_type frame(scheduler, v);
   mess::run(frame);
-  REQUIRE(std::get<0>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<0>(frame.runtime).result, opaque<uint>{1});
-  REQUIRE(std::get<1>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<1>(frame.runtime).result, opaque<float>{1.f});
-  REQUIRE(std::get<2>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<2>(frame.runtime).result, opaque<int>{5});
+  REQUIRE(std::get<0>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<0>(frame._runtime).result, opaque<uint>{1});
+  REQUIRE(std::get<1>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<1>(frame._runtime).result, opaque<float>{1.f});
+  REQUIRE(std::get<2>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<2>(frame._runtime).result, opaque<int>{5});
 }
 
-TEST_CASE("diamond graph")
+TEST_CASE("diamond gframe._runtimeraph")
 {
   mess::frame_type frame(scheduler, diamond);
   mess::run(frame);
-  REQUIRE(std::get<0>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<0>(frame.runtime).result, opaque<uint>{1});
-  REQUIRE(std::get<1>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<1>(frame.runtime).result, opaque<float>{3.f});
-  REQUIRE(std::get<2>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<2>(frame.runtime).result, opaque<int>{1});
-  REQUIRE(std::get<3>(frame.runtime).result.has_value());
-  CHECK_EQ(*std::get<3>(frame.runtime).result, opaque<int>{3});
+  REQUIRE(std::get<0>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<0>(frame._runtime).result, opaque<uint>{1});
+  REQUIRE(std::get<1>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<1>(frame._runtime).result, opaque<float>{3.f});
+  REQUIRE(std::get<2>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<2>(frame._runtime).result, opaque<int>{1});
+  REQUIRE(std::get<3>(frame._runtime).result.has_value());
+  CHECK_EQ(*std::get<3>(frame._runtime).result, opaque<int>{3});
 }

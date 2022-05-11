@@ -1,69 +1,170 @@
 # *Software is a mess, embrace it !*
 
-[![Build Status](https://travis-ci.org/LouisCharlesC/mess.svg?branch=master)](https://travis-ci.org/LouisCharlesC/mess)
-[![Build status](https://ci.appveyor.com/api/projects/status/3550cw0y96igwlye/branch/master?svg=true)](https://ci.appveyor.com/project/LouisCharlesC/mess/branch/master)
-
-*mess* is a compile-time, header-only C++17 library for dataflow programing (a.k.a. message passing, event-driven, actors, reactors, publisher-subscriber, signal-slot, observer pattern, etc.).  
-Tons of such frameworks exist, but *mess* is 100% non-intrusive and optimized away by the compiler (see section [Hello world](#Hello-world) for a demo).
+*mess* is a compile-time, C++20 library for dataflow programing that lets you build an execution graph and independently decide how it will be executed (sequentially, using a thread-pool, etc.).  
+Tons of such frameworks exist, but *mess* is meant to be non-intrusive and as low-overhead as possible (see section [Hello world](#Hello-world) for a zero runtime overhead demo).
 
 ## Briefly
 
-*mess* lets you name the values your program can compute so you can express the dependencies between them. This forms your program's dataflow. Once this is setup, you can ask *mess* to produce any named value. The execution of the dataflow is runtime, but its setup is compile-time. This gives you the flexibility of a message passing framework and the performance of plain C++ function calls !
+*mess* lets you build an execution graph by listing the functions that need to be executed and the dependencies that link them. This forms your program's dataflow, and *mess* can execute it and make its outputs available. The same graph can be executed several times and with different execution strategies. Two strategies are provided by the library: sequential and using one `std::thread` per function. The sequential strategy is equivalent to plain function calls, whereas the `std::thread` strategy uses as much parallelism as the graph allows. This lets you choose, for the same execution graph, the best execution strategy given the context. For instance, run sequentially first to facilitate debugging, or run sequentially for small inputs and in parallel for large ones. Your own execution strategies (e.g. a thread-pool) can easily be used with *mess*.
 
-As an example, here is how to tell *mess* that a value called `FilteredValue` exists, and that it can be computed by calling the member function `filter` from a value called `LowPassFilter` with as its sole argument the value called `GoodLowPassParameter` (something like `FilteredValue = LowPassFilter.filter(GoodLowPassParameter);`):
+As an example, here is how to build and execute a simple diamond graph:
 
 ```c++
-struct FilteredValue:
-	mess::IsPulledFrom<&IFilter::filter>,
-	mess::OnInstance<LowPassFilter>,
-	mess::WithArgument<GoodLowPassParameter>
-{};
+//   0
+//  / \
+// 1   2
+//  \ /
+//   3
+auto diamond =                                                                          // 1
+    mess::make_graph(                                                                   // 1
+        // Node 0                                                                       // 1
+        mess::make_node<mess::arg_predecessors<>,                                       // 1
+						mess::other_predecessors<>,                                     // 1
+						mess::successors<1, 2>>([](){return 0;}),                       // 1
+        // Node 1                                                                       // 1
+        mess::make_node<mess::arg_predecessors<0>,                                      // 1
+						mess::other_predecessors<>,                                     // 1
+						mess::successors<3>>([](int i){return i+1;}),                   // 1
+        // Node 2                                                                       // 1
+        mess::make_node<mess::arg_predecessors<0>,                                      // 1
+						mess::other_predecessors<>,                                     // 1
+						mess::successors<3>>([](int i){return i+2;}),                   // 1
+        // Node 3                                                                       // 1 
+        mess::make_node<mess::arg_predecessors<1, 2>>([](int i, int j){return i+j;}));  // 1
+
+mess::frame_type frame(mess::inline_scheduler, diamond);                                // 2
+mess::run(frame);                                                                       // 3
+assert(*frame.result<3>() == 3);                                                        // 4
 ```
 
-You can get `FilteredValue` by calling `mess::pull<FilteredValue>()`. The function is called `pull` because you explicitly ask for the value to be produced and *mess* will compute any other value it needs to do so. If the dependencies cannot be resolved or the types don't fit, your program won't compile. *mess* does not allow `push`ing values (i.e. producing every value that depends on the `push`ed one). I'm not sure if it's possible, or desirable.
+Firstly (1), the graph is built. Four nodes are created by specifying their `arg_predecessors`, `other_predecessors`, `successors` and the function to invoke. The ouput of each node listed in `arg_predecessors` is passed to the current node's function. `other_predecessors` indicate nodes that should be executed before the current node, although they do not provide an argument to the node's function. `successors` lists the nodes that have the current node as a predecessor. The `successors` list is redundant, and should be computed automatically in the future.
+
+Then (2), a frame is created to hold all the data needed for *mess* to execute the graph using the inline scheduler.
+
+Thirdly (3), the graph is executed.
+
+And finally (4), the result of the leaf node is inspected.
+
+## Parallel execution
+To execute the same graph in parallel (with nodes 1 and 2 being run at the same), simply use *mess*' `std_thread_scheduler` like so:
+
+```c++
+mess::std_thread_scheduler scheduler;       // 1
+mess::frame_type frame(scheduler, diamond); // 2
+mess::run(frame);                           // 3
+scheduler.join();                           // 4
+assert(*frame.result<3>() == 3);            // 5
+```
+
+Here, a `std_thread_scheduler` is first (1) instantiated.
+
+The rest (2, 3 and 5) is almost like before. Only (4) differs because we have to wait for the execution to finish before inspecting the result.
+
+## Fire-and-forget
+If the graph is executed in a different thread (like when using `std_thread_scheduler`) and you do not care about the result, you can launch the execution and let *mess* clean up behind you:
+
+```c++
+mess::std_thread_scheduler scheduler;
+using frame_type = mess::frame_type<mess::std_thread_scheduler, decltype(diamond)>;
+mess::run(std::make_unique<frame_type>(scheduler, diamond));
+```
+
+Here, a `frame` is created and directly passed to the `run` function. This causes *mess* to take care of having the frame live as long as needed, and deleting it after the graph is executed.
+
+Be aware that `std_thread_scheduler` will `join()` on destruction. 
 
 ## WIP
 
-*mess* is currently under development. This version is out there for me to gather feedback about the terminology, usage and useful features. I am working on version 1.0, which as a bare minimum will:
+*mess* is currently under development. Version 1.0, as a bare minimum, must:
 
-1. Compute dependencies only once, even if they are needed by more than one of the pulled values.
-1. Order the calls so that computed dependencies can be moved if possible, without risking use-after-move or any other bad surprises.
-1. Split the calls into independent stages that you can choose to parallelize using your favorite library.
+1. Correctly handle exceptions thrown by a node's function, and cancel nodes that cannot be executed anymore.
 
 It is foreseen that future versions might:
 
-1. Facilitate concurrency (coroutines?).
-1. Transparently save intermediate values inside *mess* to share the computations between several calls.
-1. Allow pushing values, if possible.
-1. Allow calls to overload sets (non-resolved overload) and function templates.
+1. Allow constexpr execution
+1. Automatically compute the `successors` list.
 1. Provide nice compilation errors rather than the typical template instantiation error messages.
+
+Another neat way of improving *mess* would be to have a nicer way to build the graph. This could easily be built on top of *mess* to simplify its use.
 
 ## Hello world
 
-Here is *mess*'s “Hello, world!”. You should know that with optimizations enabled, this code compiles to the same executable as a plain C++ “Hello, world!” (shown below). This is verified in the tests.  
-I do apologize function pointer casting, but I think that using an operator from the `std` namespace showcases the non-intrusiveness of *mess*! And it also demonstrates a limitation: you must manually resolve overloads and provide template arguments.  
-So, there it is: the overload-resolved function pointer to the template-arguments-provided std::operator<<().
+Here is *mess*'s “Hello, world!”. With optimizations enabled, this code compiles to the same executable as a plain C++ “Hello, world!” (shown below). This is verified in the tests.  
 
 ```c++
-#include <mess/mess.h>
+#include <mess/mess.hpp>
 
 #include <iostream>
 
-static const char* kHelloWorld = "Hello, world!\n";
+// We will break the hello world program into this execution graph.
+// Each node in this graph is a function. "stream" is the streaming operator<<.
+//
+// std_cout   hello_world
+//        \    /
+//        stream    std_endl
+//             \    /
+//             stream
 
-using PrintFnPtr = std::basic_ostream<char, std::char_traits<char>>&(*)(std::basic_ostream<char, std::char_traits<char>>&, const char*);
-static constexpr PrintFnPtr print = std::operator<< <std::char_traits<char> >;
+// The functions we need are defined here.
+namespace
+{
+    // Just a function returning std::cout.
+    std::basic_ostream<char, std::char_traits<char>> &std_cout()
+    {
+        return std::cout;
+    }
 
-struct PrintHelloWorld:
-	mess::IsPulledFrom<print>,
-	mess::WithArguments<
-		mess::IsPulledFrom<&std::cout>,
-		mess::IsPulledFrom<&kHelloWorld>>
-{};
+    // Another simple function
+    const char *hello_world()
+    {
+        return "Hello, World!";
+    }
+
+    // Functions with exotic return types also work. This one returns the std::endl manupulator, which is a function pointer.
+    using ManipulatorFnPtr = std::basic_ostream<char, std::char_traits<char>> &(*)(std::basic_ostream<char, std::char_traits<char>> &);
+    ManipulatorFnPtr std_endl()
+    {
+        return std::endl;
+    }
+
+    // Template lambda functions too.
+    auto stream = [](std::basic_ostream<char, std::char_traits<char>> &os, auto val) -> std::basic_ostream<char, std::char_traits<char>> &
+    { return os << val; };
+} // namespace
 
 int main()
 {
-	 mess::pull<PrintHelloWorld>();
+    // The graph is built here. As a reminder:
+	//
+	// std_cout   hello_world
+	//        \    /
+	//        stream    std_endl
+	//             \    /
+	//             stream
+    auto print_hello_world = mess::make_graph(
+        // Node 0
+        mess::make_node<mess::arg_predecessors<>, mess::other_predecessors<>,
+                        mess::successors<3>>(std_cout),
+        // Node 1
+        mess::make_node<mess::arg_predecessors<>, mess::other_predecessors<>,
+                        mess::successors<3>>(hello_world),
+        // Node 2
+        mess::make_node<mess::arg_predecessors<>, mess::other_predecessors<>,
+                        mess::successors<4>>(std_endl),
+        // Node 3
+        mess::make_node<mess::arg_predecessors<0, 1>, mess::other_predecessors<>,
+                        mess::successors<4>>(stream),
+        // Node 4
+        mess::make_node<mess::arg_predecessors<3, 2>>(stream));
+
+    // The inline scheduler simply invokes the functions it is given.
+    // Replace the next line with "mess::std_thread_scheduler scheduler;" (and don't forget to #include <mess/schedulers/std_thread.hpp>)
+    // to get a parallel execution of the graph, where each function is invoked in a separate thread.
+    mess::inline_scheduler_type scheduler;
+    // Execute the graph using the specified scheduler.
+    mess::run(mess::frame_type(scheduler, print_hello_world));
+    // This is a no-op when using mess::inline_scheduler.
+    scheduler.join();
 }
 ```
 
@@ -71,10 +172,10 @@ Here is the plain “Hello, world!” the above example compiles equal to:
 
 ```c++
 #include <iostream>
-
-int main(int argc, char **argv)
+int main()
 {
-	std::cout << "Hello, world!\n";
+	std::cout << "Hello, World!" << std::endl;
+	return 0;
 }
 ```
 
@@ -82,29 +183,25 @@ int main(int argc, char **argv)
 
 ### What *mess* saves you
 
-All messaging frameworks I know have a runtime cost:
+All messaging frameworks I know of have a runtime cost:
 
 * Memory cost: to store callable objects (function pointers, std::function instances, etc.) used to store the subscription callbacks.
 * Processing cost: to iterate through the callbacks.
-* Pointer chasing cost: to call the callbacks through function pointers or std::function, for example.
-* Virtual function call cost: for calls through std::function and overriden virtual methods.
-* Message type conversion cost: to convert your business domain type into the type the framework forces you to use to exchange data.
-* Polymorphic message type resolution cost: for message types that have polymorphic behavior so they can be transmitted through callback functions with a generic signature.
+* Indirect calls cost: to invoke callbacks through function pointers, std::function or the framework's virtual methods.
+* Conversion cost: to convert your business domain type into the type the framework forces you to use to exchange data.
 * Thread-safety cost: to safely manage the dynamic messaging structure during execution.
 * Optimization cost: for any level of indirection or polymorphism that prevent the optimizer from inlining and reasonning about the code.
 * Run-time error detection cost: when polymorphism prevents type errors to be detected at compile time.
 * etc.
 
-Sometimes, dataflow frameworks even have the compile-time cost of a separate build system (ROS, Qt).
+*mess* aims to have as little runtime cost as possible. The graph is built as a compile-time known type, no thread safe mechanism is used unless the scheduler requires it, and function arguments are stored as-is (in a `std::optional`).
 
 ### What *mess* does not offer
 
-Admitedly, dataflow frameworks typically offer *much more* functionality than *mess* does. *mess* only deals with calling functions and producing values. *mess* is **not thread-safe**, it does not even know what a thread is! If you need thread-safety, take care of it within the functions that need it.
-
-The goal of *mess* is to provide dataflow functionality, and only this, without compromising **performance**, **readability** and **type-safety**. Of course, you need to pay something to get anything. Here is the cost of *mess*:
+Admitedly, other frameworks offer *much more* functionality than *mess* does. The goal of *mess* is to provide dataflow , and only this, without compromising **performance**, **readability** and **type-safety**. Of course, you need to pay something to get anything. Here is the cost of *mess*:
 
 * Compilation time: there is some amount of meta-programming involved in *mess*, but not that much. Still, this slows down compilation.
-* Static structure: with *mess*, you cannot add or remove subscribers or callbacks on-the-fly. *mess* only lets you define the **static** structure of you program. I find this to be totally acceptable: a program always has a basic static structure. Some programs have a dynamic structure *on top of the static structure*. *mess* takes case of the static part and *let's you build the dynamic part* if you need it, anyway you like. That way, you only pay the cost of a dynamic framework for those parts of your program that benefit from the added flexibiity.
+* Static structure: with *mess*, you cannot change the number of nodes at runtime. *mess* only lets you define the **static** structure of you program. I find this to be totally acceptable: a program always has a basic static structure. Some programs have a dynamic structure *on top of the static structure*. *mess* takes case of the static part and *let's you build the dynamic part* if you need it, anyway you like. That way, you only pay the cost of a dynamic framework for those parts of your program that benefit from the added flexibility.
 
 # Acknowledgment
 Thanks to all contributors, issue raisers and stargazers!

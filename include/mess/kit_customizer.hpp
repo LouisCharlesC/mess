@@ -34,7 +34,7 @@ namespace mess
     };
 
     template <>
-    struct kit_customizer<inline_scheduler>
+    struct kit_customizer<inline_scheduler_t>
     {
         template <std::size_t... predecessors>
         using latch_type = last_predecessor_latch<predecessors...>;
