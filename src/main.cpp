@@ -60,23 +60,23 @@ char func_2(int lhs, int rhs)
 int main()
 {
   auto graph = mess::make_graph(
-      mess::make_node<mess::arg_predecessors<4>, mess::other_predecessors<>,
+      mess::make_node<0, mess::arg_predecessors<4>, mess::other_predecessors<>,
                       mess::successors<5>>(func_1<0>),
-      mess::make_node<mess::arg_predecessors<7>, mess::other_predecessors<>,
+      mess::make_node<1, mess::arg_predecessors<7>, mess::other_predecessors<>,
                       mess::successors<2, 3>>(func_1<1>),
-      mess::make_node<mess::arg_predecessors<1, 6>, mess::other_predecessors<>,
+      mess::make_node<2, mess::arg_predecessors<1, 6>, mess::other_predecessors<>,
                       mess::successors<4>>(func_2<2>),
-      mess::make_node<mess::arg_predecessors<1>, mess::other_predecessors<>,
+      mess::make_node<3, mess::arg_predecessors<1>, mess::other_predecessors<>,
                       mess::successors<4>>(func_1<3>),
-      mess::make_node<mess::arg_predecessors<2, 3>, mess::other_predecessors<>,
+      mess::make_node<4, mess::arg_predecessors<2, 3>, mess::other_predecessors<>,
                       mess::successors<8, 0>>(func_2<4>),
-      mess::make_node<mess::arg_predecessors<0>, mess::other_predecessors<>,
+      mess::make_node<5, mess::arg_predecessors<0>, mess::other_predecessors<>,
                       mess::successors<>>(func_1<5>),
-      mess::make_node<mess::arg_predecessors<>, mess::other_predecessors<>,
+      mess::make_node<6, mess::arg_predecessors<>, mess::other_predecessors<>,
                       mess::successors<2>>(func_0<6>),
-      mess::make_node<mess::arg_predecessors<>, mess::other_predecessors<>,
+      mess::make_node<7, mess::arg_predecessors<>, mess::other_predecessors<>,
                       mess::successors<1>>(func_0<7>),
-      mess::make_node<mess::arg_predecessors<4>, mess::other_predecessors<>,
+      mess::make_node<8, mess::arg_predecessors<4>, mess::other_predecessors<>,
                       mess::successors<>>(func_1<8>));
   // auto graph = mess::make_graph(mess::make_node<mess::arg_predecessors<>,
   // mess::other_predecessors<>, mess::successors<>>(func_0));

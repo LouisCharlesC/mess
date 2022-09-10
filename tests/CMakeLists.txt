@@ -23,7 +23,7 @@ set_target_properties(
 		CXX_EXTENSIONS NO
 )
 
-set(tests_SRC tests_main.cpp tests.cpp)
+set(tests_SRC tests_main.cpp graph_shapes.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
 	list(APPEND tests_SRC test_helloworld.cpp)
 endif()

@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <mess/meta/concatenate.hpp>
+#include "concatenate.hpp"
 
 #include <cstdint>
 #include <tuple>
@@ -19,9 +19,9 @@
 
 namespace mess
 {
-    template <typename flat_graph, std::size_t index>
-    constexpr bool is_leaf = std::tuple_element_t<index, flat_graph>::successors::size() == 0;
+template <typename flat_graph, std::size_t index>
+constexpr bool is_leaf = std::tuple_element_t<index, flat_graph>::successors::size() == 0;
 
-    template <typename flat_graph, std::size_t... indexes>
-    using leaf_nodes = concatenate<std::conditional_t<is_leaf<flat_graph, indexes>, std::index_sequence<indexes>, std::index_sequence<>>...>;
+template <typename flat_graph, std::size_t... indexes_v>
+using leaf_nodes = concatenate<std::conditional_t<is_leaf<flat_graph, indexes_v>, indexes<indexes_v>, indexes<>>...>;
 } // namespace mess
