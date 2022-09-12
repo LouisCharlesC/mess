@@ -66,28 +66,28 @@ namespace details
 {
 template <typename scheduler_type, typename flat_graph, typename value_type, std::size_t index> auto make_kit() noexcept
 {
-    return []<std::size_t... predecessors>(std::index_sequence<predecessors...>)
+    return []<std::size_t... predecessors>(indexes<predecessors...>)
     {
         return kit<scheduler_type, value_type, predecessors...>();
     }
     (mess::ordered_predecessors<flat_graph, index>());
 }
 
-template <typename scheduler_type, typename flat_graph, std::size_t... indexes>
-auto make_runtime_state(std::index_sequence<indexes...>) noexcept
+template <typename scheduler_type, typename flat_graph, std::size_t... all_indexes>
+auto make_runtime_state(std::index_sequence<all_indexes...>) noexcept
 {
-    return std::tuple<
-        decltype(make_kit<scheduler_type, flat_graph, details::invoke_result_t<flat_graph, indexes>, indexes>())...>();
+    return std::tuple<decltype(make_kit<scheduler_type, flat_graph, details::invoke_result_t<flat_graph, all_indexes>,
+                                        all_indexes>())...>();
 }
 
-template <typename scheduler_type, typename flat_graph, std::size_t... indexes>
-auto make_self_delete_latch(std::index_sequence<indexes...>) noexcept
+template <typename scheduler_type, typename flat_graph, std::size_t... ordered_indexes>
+auto make_self_delete_latch(indexes<ordered_indexes...>) noexcept
 {
-    return []<std::size_t... leaf_nodes_index>(std::index_sequence<leaf_nodes_index...>)
+    return []<std::size_t... leaf_node_indexes>(indexes<leaf_node_indexes...>)
     {
-        return typename kit_customizer<scheduler_type>::template latch_type<leaf_nodes_index...>();
+        return typename kit_customizer<scheduler_type>::template latch_type<leaf_node_indexes...>();
     }
-    (leaf_nodes<flat_graph, indexes...>());
+    (leaf_nodes<flat_graph, ordered_indexes...>());
 }
 } // namespace details
 
@@ -97,5 +97,5 @@ using runtime_state = decltype(details::make_runtime_state<scheduler_type, flat_
 
 template <typename scheduler_type, typename flat_graph>
 using leaf_nodes_latch =
-    decltype(details::make_self_delete_latch<scheduler_type, flat_graph>(details::ordered_graph<flat_graph>()));
+    decltype(details::make_self_delete_latch<scheduler_type, flat_graph>(details::ordered_indexes<flat_graph>()));
 } // namespace mess

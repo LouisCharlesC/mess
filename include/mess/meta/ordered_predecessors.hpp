@@ -1,19 +1,17 @@
-/**
- * @file ordered_predecessors.hpp
- * @author L.-C. C. (me@domain.com)
- * @brief
- * @version 0.1
- * @date 2022-02-15
- *
- * @copyright Copyright (c) 2022
- *
- */
+// Copyright(c) 2022 Louis-Charles Caron
+
+// This file is part of the mess library (https://github.com/LouisCharlesC/mess).
+
+// Use of this source code is governed by an MIT-style license that can be found in the LICENSE file or at
+// https://opensource.org/licenses/MIT.
 
 #pragma once
 
-#include <mess/meta/concatenate.hpp>
-#include <mess/meta/contains.hpp>
-#include <mess/meta/root_nodes.hpp>
+#include "concatenate.hpp"
+#include "contains.hpp"
+#include "find.hpp"
+#include "root_nodes.hpp"
+#include <mess/graph.hpp>
 
 #include <cstdint>
 #include <tuple>
@@ -25,20 +23,21 @@ namespace mess
 namespace details
 {
 template <typename flat_graph, std::size_t... ordered, std::size_t first, std::size_t... others>
-consteval auto recurse_on_siblings(std::index_sequence<ordered...>, std::index_sequence<first, others...>);
+consteval auto recurse_on_siblings(indexes<ordered...>, indexes<first, others...>);
 
 template <typename flat_graph, std::size_t current, std::size_t... ordered>
-consteval auto recurse_on_successors_if_ready(std::index_sequence<ordered...>)
+consteval auto recurse_on_successors_if_ready(indexes<ordered...>)
 {
-    using predecessors = typename std::tuple_element_t<current, flat_graph>::unordered_predecessors;
-    constexpr bool is_ready = mess::contains<predecessors, std::index_sequence<ordered...>>;
+    using predecessors = unordered_predecessor_indexes<flat_graph, current>;
+    constexpr bool is_ready = mess::contains<predecessors, indexes<ordered...>>;
 
     if constexpr (is_ready)
     {
-        using successors = typename std::tuple_element_t<current, flat_graph>::successors;
-        constexpr auto ordered_with_current = std::index_sequence<ordered..., current>();
+        constexpr auto ordered_with_current = indexes<ordered..., current>();
+        using successors =
+            mess::to_indexes<flat_graph, typename std::tuple_element_t<current, flat_graph>::successor_tags>;
 
-        if constexpr (successors::size() == 0)
+        if constexpr (successors::size == 0)
         {
             return ordered_with_current;
         }
@@ -49,15 +48,14 @@ consteval auto recurse_on_successors_if_ready(std::index_sequence<ordered...>)
     }
     else
     {
-        return std::index_sequence<ordered...>();
+        return indexes<ordered...>();
     }
 }
 
 template <typename flat_graph, std::size_t... ordered, std::size_t first, std::size_t... others>
-consteval auto recurse_on_siblings(std::index_sequence<ordered...>, std::index_sequence<first, others...>)
+consteval auto recurse_on_siblings(indexes<ordered...>, indexes<first, others...>)
 {
-    constexpr auto ordered_successors =
-        recurse_on_successors_if_ready<flat_graph, first>(std::index_sequence<ordered...>());
+    constexpr auto ordered_successors = recurse_on_successors_if_ready<flat_graph, first>(indexes<ordered...>());
 
     if constexpr (sizeof...(others) == 0)
     {
@@ -65,29 +63,25 @@ consteval auto recurse_on_siblings(std::index_sequence<ordered...>, std::index_s
     }
     else
     {
-        return recurse_on_siblings<flat_graph>(ordered_successors, std::index_sequence<others...>());
+        return recurse_on_siblings<flat_graph>(ordered_successors, indexes<others...>());
     }
 }
 
-template <typename flat_graph> consteval auto ordered_graph()
+template <typename flat_graph> consteval auto ordered_indexes()
 {
-    return []<std::size_t... indexes>(std::index_sequence<indexes...>)
-    {
-        return recurse_on_siblings<flat_graph>(std::index_sequence<>(), root_nodes<flat_graph, indexes...>());
-    }
-    (std::make_index_sequence<std::tuple_size_v<flat_graph>>());
+    return recurse_on_siblings<flat_graph>(indexes<>(), mess::root_indexes<flat_graph>());
 }
 
 template <typename flat_graph, std::size_t index, std::size_t... ordered>
-consteval auto ordered_predecessors(std::index_sequence<ordered...>)
+consteval auto ordered_predecessors(indexes<ordered...>)
 {
-    using predecessors = typename std::tuple_element_t<index, flat_graph>::unordered_predecessors;
-    return concatenate<std::conditional_t<contains(std::index_sequence<ordered>(), predecessors()),
-                                          std::index_sequence<ordered>, std::index_sequence<>>...>();
+    using predecessors = unordered_predecessor_indexes<flat_graph, index>;
+    return concatenate<
+        std::conditional_t<contains(indexes<ordered>(), predecessors()), indexes<ordered>, indexes<>>...>();
 }
 } // namespace details
 
 template <typename flat_graph, std::size_t index>
 using ordered_predecessors =
-    decltype(details::ordered_predecessors<flat_graph, index>(details::ordered_graph<flat_graph>()));
+    decltype(details::ordered_predecessors<flat_graph, index>(details::ordered_indexes<flat_graph>()));
 } // namespace mess

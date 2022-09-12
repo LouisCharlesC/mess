@@ -1,40 +1,37 @@
 # *Software is a mess, embrace it !*
-
 *mess* is a compile-time, C++20 library for dataflow programing that lets you build an execution graph and independently decide how it will be executed (sequentially, using a thread-pool, etc.).  
 Tons of such frameworks exist, but *mess* is meant to be non-intrusive and as low-overhead as possible (see section [Hello world](#Hello-world) for a zero runtime overhead demo).
 
 ## Briefly
+*mess* lets you build an execution graph by listing the functions that need to be executed and the dependencies that link them. This forms your program's dataflow, and *mess* can execute it. The same graph can be executed several times and with different execution strategies. Two strategies are provided by the library: sequential and using one `std::thread` per function. The sequential strategy is equivalent to plain function calls, whereas the `std::thread` strategy uses as much parallelism as the graph allows. This lets you choose, for the same execution graph, the best execution strategy given the context. For instance, run sequentially first to facilitate debugging, or run sequentially for small inputs and in parallel for large ones. Your own execution strategies (e.g. a thread-pool) can easily be plugged into *mess*.
 
-*mess* lets you build an execution graph by listing the functions that need to be executed and the dependencies that link them. This forms your program's dataflow, and *mess* can execute it and make its outputs available. The same graph can be executed several times and with different execution strategies. Two strategies are provided by the library: sequential and using one `std::thread` per function. The sequential strategy is equivalent to plain function calls, whereas the `std::thread` strategy uses as much parallelism as the graph allows. This lets you choose, for the same execution graph, the best execution strategy given the context. For instance, run sequentially first to facilitate debugging, or run sequentially for small inputs and in parallel for large ones. Your own execution strategies (e.g. a thread-pool) can easily be used with *mess*.
-
-As an example, here is how to build and execute a simple diamond graph:
+As an example, here is how to build and execute a diamond graph:
 
 ```c++
-//   0
+//   1
 //  / \
-// 1   2
+// 2   3
 //  \ /
-//   3
+//   4
+struct One;   // 1
+struct Two;   // 1
+struct Three; // 1
+struct Four;  // 1
 auto diamond =                                                                          // 1
     mess::make_graph(                                                                   // 1
-        // Node 0                                                                       // 1
-        mess::make_node<mess::arg_predecessors<>,                                       // 1
-						mess::other_predecessors<>,                                     // 1
-						mess::successors<1, 2>>([](){return 0;}),                       // 1
-        // Node 1                                                                       // 1
-        mess::make_node<mess::arg_predecessors<0>,                                      // 1
-						mess::other_predecessors<>,                                     // 1
-						mess::successors<3>>([](int i){return i+1;}),                   // 1
-        // Node 2                                                                       // 1
-        mess::make_node<mess::arg_predecessors<0>,                                      // 1
-						mess::other_predecessors<>,                                     // 1
-						mess::successors<3>>([](int i){return i+2;}),                   // 1
-        // Node 3                                                                       // 1 
-        mess::make_node<mess::arg_predecessors<1, 2>>([](int i, int j){return i+j;}));  // 1
+        mess::make_node<One,
+                        mess::arg_predecessors<>,                                       // 1
+						mess::successors<Two, Three>>
+                        ([](){return 0;}),                       // 1
+        mess::make_node<Two, mess::arg_predecessors<One>,
+                        mess::successors<Four>>([](int i){return i+1;}),   // 1
+        mess::make_node<Three, mess::arg_predecessors<One>,
+                        mess::successors<Four>>([](int i){return i+2;}), // 1 
+        mess::make_node<Four, mess::arg_predecessors<Two, Three>>
+                        ([](int i, int j){return i+j;}));  // 1
 
 mess::frame_type frame(mess::inline_scheduler, diamond);                                // 2
 mess::run(frame);                                                                       // 3
-assert(*frame.result<3>() == 3);                                                        // 4
 ```
 
 Firstly (1), the graph is built. Four nodes are created by specifying their `arg_predecessors`, `other_predecessors`, `successors` and the function to invoke. The ouput of each node listed in `arg_predecessors` is passed to the current node's function. `other_predecessors` indicate nodes that should be executed before the current node, although they do not provide an argument to the node's function. `successors` lists the nodes that have the current node as a predecessor. The `successors` list is redundant, and should be computed automatically in the future.
@@ -43,8 +40,6 @@ Then (2), a frame is created to hold all the data needed for *mess* to execute t
 
 Thirdly (3), the graph is executed.
 
-And finally (4), the result of the leaf node is inspected.
-
 ## Parallel execution
 To execute the same graph in parallel (with nodes 1 and 2 being run at the same), simply use *mess*' `std_thread_scheduler` like so:
 
@@ -52,8 +47,6 @@ To execute the same graph in parallel (with nodes 1 and 2 being run at the same)
 mess::std_thread_scheduler scheduler;       // 1
 mess::frame_type frame(scheduler, diamond); // 2
 mess::run(frame);                           // 3
-scheduler.join();                           // 4
-assert(*frame.result<3>() == 3);            // 5
 ```
 
 Here, a `std_thread_scheduler` is first (1) instantiated.
@@ -194,7 +187,7 @@ All messaging frameworks I know of have a runtime cost:
 * Run-time error detection cost: when polymorphism prevents type errors to be detected at compile time.
 * etc.
 
-*mess* aims to have as little runtime cost as possible. The graph is built as a compile-time known type, no thread safe mechanism is used unless the scheduler requires it, and function arguments are stored as-is (in a `std::optional`).
+*mess* aims to have as little runtime cost as possible. The graph is built as a compile-time type, no thread safe mechanism is used unless the scheduler requires it, and function arguments are stored as-is (in a `std::optional`).
 
 ### What *mess* does not offer
 

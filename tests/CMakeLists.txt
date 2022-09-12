@@ -3,7 +3,6 @@ find_package(doctest CONFIG REQUIRED)
 
 add_executable(helloworld helloworld/withmess/helloworld.cpp)
 target_include_directories(helloworld PUBLIC $<TARGET_PROPERTY:mess,INCLUDE_DIRECTORIES>)
-target_compile_options (helloworld PUBLIC -fno-exceptions) # TODO: remove this when everything is nicely noexcept.
 target_set_warnings(helloworld ENABLE ALL AS_ERROR ALL DISABLE Annoying)
 set_target_properties(
 	helloworld
@@ -23,7 +22,7 @@ set_target_properties(
 		CXX_EXTENSIONS NO
 )
 
-set(tests_SRC tests_main.cpp graph_shapes.cpp)
+set(tests_SRC tests_main.cpp meta/test_contains.cpp meta/test_root_nodes.cpp meta/test_ordered_predecessors.cpp meta/test_find.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
 	list(APPEND tests_SRC test_helloworld.cpp)
 endif()

@@ -1,5 +1,5 @@
 /**
- * @file root_nodes.hpp
+ * @file root_tags.hpp
  * @author L.-C. C. (me@domain.com)
  * @brief
  * @version 0.1
@@ -11,17 +11,31 @@
 
 #pragma once
 
-#include <mess/meta/concatenate.hpp>
+#include "concatenate.hpp"
+#include "sequences.hpp"
 
 #include <cstdint>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace mess
 {
+namespace details
+{
 template <typename flat_graph, std::size_t index>
-constexpr bool is_root = std::tuple_element_t<index, flat_graph>::unordered_predecessors::size == 0;
+constexpr bool is_root = std::tuple_element_t<index, flat_graph>::arg_predecessor_tags::size +
+                             std::tuple_element_t<index, flat_graph>::other_predecessor_tags::size ==
+                         0;
 
-template <typename flat_graph, std::size_t... indexes_v>
-using root_nodes = concatenate<std::conditional_t<is_root<flat_graph, indexes_v>, indexes<indexes_v>, indexes<>>...>;
+template <typename flat_graph, std::size_t... all_indexes>
+consteval auto root_indexes(std::index_sequence<all_indexes...>)
+{
+    return concatenate<std::conditional_t<is_root<flat_graph, all_indexes>, indexes<all_indexes>, indexes<>>...>();
+}
+} // namespace details
+
+template <typename flat_graph>
+using root_indexes =
+    decltype(details::root_indexes<flat_graph>(std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
 } // namespace mess

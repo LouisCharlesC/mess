@@ -15,14 +15,12 @@
 
 namespace mess
 {
-    template <std::size_t predecessor>
-    class ready_latch
+template <std::size_t predecessor> class ready_latch
+{
+  public:
+    template <std::size_t> bool notify_and_check_if_ready()
     {
-    public:
-        template <std::size_t>
-        bool notify_and_check_if_ready()
-        {
-            return true;
-        }
-    };
+        return true;
+    }
+};
 } // namespace mess

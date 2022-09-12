@@ -7,25 +7,26 @@
 
 #pragma once
 
+#include "sequences.hpp"
+
 #include <cstdint>
-#include <utility>
 
 namespace mess
 {
 namespace details
 {
-template <std::size_t index, std::size_t... super_indexes> consteval bool contains()
+template <std::size_t index, std::size_t... containing_indexes> consteval bool contains()
 {
-    return ((index == super_indexes) || ...);
+    return ((index == containing_indexes) || ...);
 }
 
-template <std::size_t... indexes, std::size_t... super_indexes>
-consteval bool contains(std::index_sequence<indexes...>, std::index_sequence<super_indexes...>)
+template <std::size_t... contained_indexes, std::size_t... containing_indexes>
+consteval bool contains(indexes<contained_indexes...>, indexes<containing_indexes...>)
 {
-    return (contains<indexes, super_indexes...>() && ...);
+    return (contains<contained_indexes, containing_indexes...>() && ...);
 }
 } // namespace details
 
-template <typename sequence, typename super_sequence>
-constexpr bool contains = details::contains(sequence(), super_sequence());
+template <typename contained_indexes, typename containing_indexes>
+constexpr bool contains = details::contains(contained_indexes(), containing_indexes());
 } // namespace mess

@@ -5,11 +5,13 @@
 // Use of this source code is governed by an MIT-style license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#pragma once
+#include <doctest/doctest.h>
 
-#include <utility>
+#include <mess/meta/contains.hpp>
 
-namespace mess
+#include <type_traits>
+
+TEST_CASE("Empty contained")
 {
-template <typename... sequences_t> using concatenate = decltype((std::declval<sequences_t>() + ...));
-} // namespace mess
+    static_assert(mess::contains<mess::indexes<>, mess::indexes<0, 1, 2>>, "");
+}
