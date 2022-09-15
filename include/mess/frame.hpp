@@ -21,9 +21,10 @@ template <typename scheduler_type, typename flat_graph> class frame_type
     }
 
     // private:
+    scheduler_type &_scheduler; // TODO decide if this is a ref or not.
     [[no_unique_address]] flat_graph _graph;
     [[no_unique_address]] runtime_state<scheduler_type, flat_graph> _runtime;
-    [[no_unique_address]] leaf_nodes_latch<scheduler_type, flat_graph> _leafs_latch;
-    scheduler_type &_scheduler; // TODO copy the scheduler
+    [[no_unique_address]] done_latch<scheduler_type, flat_graph> _done_latch;
+    [[no_unique_address]] cancel_flags<scheduler_type, flat_graph> _cancel_flags;
 };
 } // namespace mess

@@ -59,11 +59,9 @@ template <bool is_self_delete> struct invoker
         }
     }
 
-    template <std::size_t index, typename scheduler_type, typename flat_graph, typename... arg_types>
-    static void thunk(frame_type<scheduler_type, flat_graph> &frame, const arg_types &...args) noexcept
+    template <std::size_t index, typename scheduler_type, typename flat_graph>
+    static void notify_after_invocation(frame_type<scheduler_type, flat_graph> &frame)
     {
-        invoke_taking_care_of_exceptions_and_cancelation<index>(frame, args...);
-
         if constexpr (!is_leaf<flat_graph, index>)
         {
             // Non-leaf nodes notify their successors.
@@ -72,11 +70,20 @@ template <bool is_self_delete> struct invoker
         else if (is_self_delete)
         {
             // Leaf nodes notify the self_deleter if needed.
-            if (frame._leafs_latch.template notify_and_check_if_ready<index>())
+            if (frame._done_latch.template notify_and_check_if_ready<index>())
             {
+                // And when everything is done executing, the frame gets deleted.
                 delete (std::addressof(frame));
             }
         }
+    }
+
+    template <std::size_t index, typename scheduler_type, typename flat_graph, typename... arg_types>
+    static void thunk(frame_type<scheduler_type, flat_graph> &frame, const arg_types &...args) noexcept
+    {
+        invoke_taking_care_of_exceptions_and_cancelation<index>(frame, args...);
+
+        notify_after_invocation<index>(frame);
     }
 
     template <std::size_t index, typename scheduler_type, typename flat_graph>
@@ -94,10 +101,20 @@ template <bool is_self_delete> struct invoker
     template <std::size_t notifying, std::size_t notified, typename scheduler_type, typename flat_graph>
     static void notify_and_schedule_if_ready(frame_type<scheduler_type, flat_graph> &frame) noexcept
     {
-        if (std::get<notified>(frame._runtime)
-                .latch.template notify_and_check_if_ready<notifying>()) // TODO: or if canceled
+        if (std::get<notified>(frame._runtime).latch.template notify_and_check_if_ready<notifying>())
         {
-            fetch_args_and_schedule<notified>(frame);
+            // if constexpr (!all_noexcept)
+            {
+                //     if (is_cancelled)
+                //     {
+                //         notify_after_invocation<notify_after_invocation>(frame);
+
+                //         return;
+                //     }
+                // }
+
+                fetch_args_and_schedule<notified>(frame);
+            }
         }
     }
 

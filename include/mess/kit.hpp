@@ -89,6 +89,22 @@ auto make_self_delete_latch(indexes<ordered_indexes...>) noexcept
     }
     (leaf_nodes<flat_graph, ordered_indexes...>());
 }
+
+template <typename cancel_flag_type, std::size_t index> struct indexed_cancel_flag
+{
+    cancel_flag_type flag;
+};
+
+template <typename scheduler_type, typename flat_graph, std::size_t... all_indexes>
+auto make_cancel_flags(std::index_sequence<all_indexes...>) noexcept
+{
+    return []<std::size_t... leaf_node_indexes>(indexes<leaf_node_indexes...>)
+    {
+        return std::tuple<
+            indexed_cancel_flag<typename kit_customizer<scheduler_type>::cancel_flag_type, leaf_node_indexes>...>();
+    }
+    (leaf_nodes<flat_graph, all_indexes...>());
+}
 } // namespace details
 
 template <typename scheduler_type, typename flat_graph>
@@ -96,6 +112,10 @@ using runtime_state = decltype(details::make_runtime_state<scheduler_type, flat_
     std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
 
 template <typename scheduler_type, typename flat_graph>
-using leaf_nodes_latch =
+using done_latch =
     decltype(details::make_self_delete_latch<scheduler_type, flat_graph>(details::ordered_indexes<flat_graph>()));
+
+template <typename scheduler_type, typename flat_graph>
+using cancel_flags = decltype(details::make_cancel_flags<scheduler_type, flat_graph>(
+    std::make_index_sequence<std::tuple_size_v<flat_graph>>()));
 } // namespace mess
