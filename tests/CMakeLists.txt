@@ -22,7 +22,7 @@ set_target_properties(
 		CXX_EXTENSIONS NO
 )
 
-set(tests_SRC tests_main.cpp meta/test_contains.cpp meta/test_root_nodes.cpp meta/test_ordered_predecessors.cpp meta/test_find.cpp)
+set(tests_SRC tests_main.cpp sequence/test_sequence.cpp)#meta/test_contains.cpp meta/test_root_nodes.cpp meta/test_ordered_predecessors.cpp meta/test_find.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
 	list(APPEND tests_SRC test_helloworld.cpp)
 endif()

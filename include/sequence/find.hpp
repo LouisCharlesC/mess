@@ -9,7 +9,7 @@
 
 #include <mess/meta/sequences.hpp>
 
-#include <cstdint>
+#include <cstddef>
 #include <tuple>
 
 namespace mess

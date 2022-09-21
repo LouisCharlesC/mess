@@ -9,7 +9,7 @@
 
 #include "sequences.hpp"
 
-#include <cstdint>
+#include <cstddef>
 
 namespace mess
 {
@@ -26,7 +26,4 @@ consteval bool contains(indexes<contained_indexes...>, indexes<containing_indexe
     return (contains<contained_indexes, containing_indexes...>() && ...);
 }
 } // namespace details
-
-template <typename contained_indexes, typename containing_indexes>
-constexpr bool contains = details::contains(contained_indexes(), containing_indexes());
 } // namespace mess

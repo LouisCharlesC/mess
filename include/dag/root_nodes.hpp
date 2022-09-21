@@ -14,7 +14,7 @@
 #include "concatenate.hpp"
 #include "sequences.hpp"
 
-#include <cstdint>
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
 #include <utility>

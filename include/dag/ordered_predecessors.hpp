@@ -13,7 +13,7 @@
 #include "root_nodes.hpp"
 #include <mess/graph.hpp>
 
-#include <cstdint>
+#include <cstddef>
 #include <tuple>
 #include <type_traits>
 #include <utility>

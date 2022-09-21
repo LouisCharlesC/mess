@@ -12,7 +12,7 @@
 #include <mess/meta/root_nodes.hpp>
 #include <mess/meta/sequences.hpp>
 
-#include <cstdint>
+#include <cstddef>
 #include <memory>
 #include <tuple>
 #include <utility>

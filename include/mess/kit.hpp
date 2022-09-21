@@ -19,7 +19,7 @@
 #include <mess/meta/ordered_predecessors.hpp>
 #include <mess/meta/sequences.hpp>
 
-#include <cstdint>
+#include <cstddef>
 #include <tuple>
 #include <utility>
 

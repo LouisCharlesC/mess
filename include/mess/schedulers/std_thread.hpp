@@ -12,32 +12,30 @@
 #pragma once
 
 #include <atomic>
-#include <cstdint>
+#include <cstddef>
 #include <thread>
 #include <utility>
 
 namespace mess
 {
-    class std_thread_scheduler
+class std_thread_scheduler
+{
+  public:
+    ~std_thread_scheduler() noexcept;
+
+    template <typename F> void schedule(F f)
     {
-    public:
-        ~std_thread_scheduler() noexcept;
+        ++_pending;
+        std::thread([f, this]() {
+            f();
+            --this->_pending;
+            this->_pending.notify_one();
+        }).detach();
+    }
 
-        template <typename F>
-        void schedule(F f)
-        {
-            ++_pending;
-            std::thread([f, this]()
-                        {
-                            f();
-                            --this->_pending;
-                            this->_pending.notify_one(); })
-                .detach();
-        }
+    void join() const noexcept;
 
-        void join() const noexcept;
-
-    private:
-        std::atomic<std::size_t> _pending = ATOMIC_VAR_INIT(0);
-    };
+  private:
+    std::atomic<std::size_t> _pending = ATOMIC_VAR_INIT(0);
+};
 } // namespace mess
