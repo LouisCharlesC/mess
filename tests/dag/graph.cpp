@@ -5,12 +5,13 @@
 // Use of this source code is governed by an MIT-style license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#pragma once
+#include <dag/graph.hpp>
 
-#include <tuple>
+struct One;
+struct Two;
+struct Three;
+struct Four;
+struct Five;
 
-namespace tuple_ops
-{
-template <typename type> constexpr bool is_tuple = false;
-template <typename... types> constexpr bool is_tuple<std::tuple<types...>> = true;
-} // namespace tuple_ops
+static_assert(std::is_same_v<dag::node<One, Two, Three>::tag, One>, "");
+static_assert(std::is_same_v<dag::node<One, Two, Three>::predecessors, set::types<Two, Three>>, "");

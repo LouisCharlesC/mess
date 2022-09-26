@@ -7,58 +7,34 @@
 
 #pragma once
 
-#include <mess/meta/concatenate.hpp>
-#include <mess/meta/find.hpp>
-#include <mess/meta/sequences.hpp>
+#include <set/types.hpp>
 
 #include <cassert>
 #include <tuple>
 #include <utility>
 
-namespace mess
+namespace dag
 {
-template <typename... nodes_type> using flat_graph = std::tuple<nodes_type...>;
-
-template <typename tag_t, typename invocable_type_t, typename arg_predecessors_t, typename successors_t,
-          typename other_predecessors_t>
-struct node_type
+template <typename tag_t, typename... predecessors_t> struct node
 {
-    static_assert(is_arg_predecessors_type(arg_predecessors_t()),
-                  "mess::node_type's second template argument must be of type mess::args.");
-    static_assert(is_other_predecessors_type(other_predecessors_t()),
-                  "mess::node_type's third template argument must be of type mess::after.");
-    static_assert(is_successors_type(successors_t()),
-                  "mess::node_type's fourth template argument must be of type mess::successors.");
+    static_assert(!(std::is_same_v<tag_t, predecessors_t> || ...), "tag_t must not appear in predecessors_t...");
 
     using tag = tag_t;
-    using invocable_type = invocable_type_t;
-    using arg_predecessor_tags = arg_predecessors_t;
-    using other_predecessor_tags = other_predecessors_t;
-    using successor_tags = successors_t;
-
-    invocable_type invocable;
+    using predecessors = set::types<predecessors_t...>;
 };
 
-template <typename flat_graph, std::size_t index>
-using arg_predecessor_indexes =
-    to_indexes<flat_graph, typename std::tuple_element_t<index, flat_graph>::arg_predecessor_tags>;
-template <typename flat_graph, std::size_t index>
-using unordered_predecessor_indexes =
-    concatenate<arg_predecessor_indexes<flat_graph, index>,
-                to_indexes<flat_graph, typename std::tuple_element_t<index, flat_graph>::other_predecessor_tags>>;
-template <typename flat_graph, std::size_t index>
-using successor_indexes = to_indexes<flat_graph, typename std::tuple_element_t<index, flat_graph>::successor_tags>;
-
-template <typename tag, typename arg_predecessors_tags, typename successors = mess::successors<>,
-          typename other_predecessors_tags = mess::other_predecessors<>, typename invocable_type = void>
-constexpr auto make_node(invocable_type &&invocable)
+template <typename T>
+concept Node = requires(T)
 {
-    return node_type<tag, invocable_type, arg_predecessors_tags, successors, other_predecessors_tags>{
-        std::forward<invocable_type>(invocable)};
-}
+    typename T::tag;
+    typename T::predecessors;
+};
 
-template <typename... nodes_type> constexpr auto make_graph(nodes_type &&...nodes)
-{
-    return std::make_tuple(std::forward<nodes_type>(nodes)...);
-}
-} // namespace mess
+template <Node... nodes> using graph = set::types<nodes...>;
+
+template <typename nodes> constexpr bool is_graph = false;
+template <typename... nodes> constexpr bool is_graph<graph<nodes...>> = true;
+
+template <typename T>
+concept Graph = is_graph<T>;
+} // namespace dag

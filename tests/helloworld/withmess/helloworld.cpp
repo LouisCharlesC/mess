@@ -63,12 +63,8 @@ int main()
     //         4: stream  3: std_endl
     //               \     /
     //              5: stream
-    auto print_hello_world =
-        mess::make_graph(mess::make_node<One, mess::arg_predecessors<>, mess::successors<Four>>(std_cout),
-                         mess::make_node<Two, mess::arg_predecessors<>, mess::successors<Four>>(hello_world),
-                         mess::make_node<Three, mess::arg_predecessors<>, mess::successors<Five>>(std_endl),
-                         mess::make_node<Four, mess::arg_predecessors<One, Two>, mess::successors<Five>>(stream),
-                         mess::make_node<Five, mess::arg_predecessors<Four, Three>>(stream));
+    auto print_hello_world = mess::make_graph(mess::make_node<One>(), mess::make_node<2>(), mess::make_node<Three>(),
+                                              mess::make_node<Four, One, 2>(), mess::make_node<Five, Four, Three>());
 
     // The inline scheduler simply invokes the functions it is given.
     // Replace the next line with "mess::std_thread_scheduler scheduler;" (and don't forget to #include
