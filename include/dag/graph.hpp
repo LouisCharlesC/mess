@@ -33,7 +33,7 @@ concept Node = requires(T)
 template <Node... nodes> using graph = set::types<nodes...>;
 
 template <typename nodes> constexpr bool is_graph = false;
-template <typename... nodes> constexpr bool is_graph<graph<nodes...>> = true;
+template <Node... nodes> constexpr bool is_graph<graph<nodes...>> = true;
 
 template <typename T>
 concept Graph = is_graph<T>;

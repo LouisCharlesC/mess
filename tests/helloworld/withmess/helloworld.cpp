@@ -5,7 +5,7 @@
 // Use of this source code is governed by an MIT-style license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#include <mess/mess.hpp>
+#include <datapath/graph.hpp>
 
 #include <iostream>
 
@@ -63,14 +63,15 @@ int main()
     //         4: stream  3: std_endl
     //               \     /
     //              5: stream
-    auto print_hello_world = mess::make_graph(mess::make_node<One>(), mess::make_node<2>(), mess::make_node<Three>(),
-                                              mess::make_node<Four, One, 2>(), mess::make_node<Five, Four, Three>());
+    auto print_hello_world = datapath::make_graph(
+        datapath::make_node<One>(std_cout), datapath::make_node<Two>(hello_world), datapath::make_node<Three>(std_endl),
+        datapath::make_node<Four, One, Two>(stream), datapath::make_node<Five, Four, Three>(stream));
 
     // The inline scheduler simply invokes the functions it is given.
     // Replace the next line with "mess::std_thread_scheduler scheduler;" (and don't forget to #include
     // <mess/schedulers/std_thread.hpp>) to get a parallel execution of the graph, where each function is invoked in a
     // separate thread.
-    mess::inline_scheduler_t scheduler;
+    // mess::inline_scheduler_t scheduler;
     // Execute the graph using the specified scheduler.
-    mess::run(mess::frame_type(scheduler, print_hello_world));
+    // mess::run(mess::frame_type(scheduler, print_hello_world));
 }

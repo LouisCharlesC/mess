@@ -8,20 +8,26 @@
 #pragma once
 
 #include "graph.hpp"
-#include <set/types.hpp>
+#include "tag_index.hpp"
+#include <set/concatenate.hpp>
+
+#include <tuple>
+#include <type_traits>
 
 namespace dag
 {
 namespace details
 {
-template <typename> struct tags;
+template <Node node> constexpr bool is_root = std::tuple_size_v<typename node::predecessors> == 0;
+
+template <typename> struct roots;
 template <template <typename...> typename graph, Node... nodes>
 requires Graph<graph<nodes...>>
-struct tags<graph<nodes...>>
+struct roots<graph<nodes...>>
 {
-    using type = set::types<typename nodes::tag...>;
+    using type = set::concatenate<std::conditional_t<is_root<nodes>, set::types<typename nodes::tag>, set::types<>>...>;
 };
 } // namespace details
 
-template <Graph graph> using tags = typename details::tags<graph>::type;
+template <Graph graph> using roots = typename details::roots<graph>::type;
 } // namespace dag

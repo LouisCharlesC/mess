@@ -5,16 +5,12 @@
 // Use of this source code is governed by an MIT-style license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
-#include <doctest/doctest.h>
-
 #include <datapath/graph.hpp>
+#include <doctest/doctest.h>
+#include <func.hpp>
 
 namespace
 {
-template <typename Return, typename... Args> constexpr Return func(Args... args)
-{
-    return (args + ... + sizeof...(args)) + 1;
-}
 
 struct top;
 struct left;

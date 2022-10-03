@@ -24,12 +24,12 @@ template <typename tag> struct tag_index
     std::size_t index;
 };
 
-template <typename graph, std::size_t... indexes> consteval auto make_index_map(std::index_sequence<indexes...>)
+template <Graph graph, std::size_t... indexes> consteval auto make_index_map(std::index_sequence<indexes...>)
 {
     return std::tuple<tag_index<typename std::tuple_element_t<indexes, graph>::tag>...>(indexes...);
 }
 
-template <typename graph>
+template <Graph graph>
 constexpr auto index_map = make_index_map<graph>(std::make_index_sequence<std::tuple_size_v<graph>>());
 } // namespace details
 
