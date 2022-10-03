@@ -32,6 +32,7 @@ set(tests_SRC
 	dag/tag_index.cpp
 	dag/successors.cpp
 	dag/roots.cpp
+	dag/leafs.cpp
 	datapath/graph.cpp)#meta/test_contains.cpp meta/test_root_nodes.cpp meta/test_ordered_predecessors.cpp meta/test_find.cpp)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
 	list(APPEND tests_SRC test_helloworld.cpp)

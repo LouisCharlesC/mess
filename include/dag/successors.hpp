@@ -20,16 +20,16 @@ namespace dag
 {
 namespace details
 {
-template <Graph graph, std::size_t index> struct successors;
-template <std::size_t index, template <typename...> typename graph, Node... nodes>
+template <Graph graph, typename tag> struct successors;
+template <typename tag, template <typename...> typename graph, Node... nodes>
 requires Graph<graph<nodes...>>
-struct successors<graph<nodes...>, index>
+struct successors<graph<nodes...>, tag>
 {
     using type = set::concatenate<std::conditional_t<
-        set::contains<typename std::tuple_element_t<index, graph<nodes...>>::tag, typename nodes::predecessors>,
+        set::contains<typename dag::graph_node<graph<nodes...>, tag>::tag, typename nodes::predecessors>,
         set::types<typename nodes::tag>, set::types<>>...>;
 };
 } // namespace details
 
-template <Graph graph, std::size_t index> using successors = typename details::successors<graph, index>::type;
+template <Graph graph, typename tag> using successors = typename details::successors<graph, tag>::type;
 } // namespace dag
