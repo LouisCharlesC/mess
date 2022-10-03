@@ -10,8 +10,6 @@
 struct One;
 struct Two;
 struct Three;
-struct Four;
-struct Five;
 
-static_assert(std::is_same_v<dag::node<One, Two, Three>::tag, One>, "");
-static_assert(std::is_same_v<dag::node<One, Two, Three>::predecessors, set::types<Two, Three>>, "");
+static_assert(std::is_same_v<dag::node<One(Two, Three)>::tag, One>, "");
+static_assert(std::is_same_v<dag::node<One(Two, Three)>::predecessors, set::types<Two, Three>>, "");

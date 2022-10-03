@@ -16,6 +16,6 @@ struct Two;
 struct Three;
 } // namespace
 
-using three_nodes = dag::graph<dag::node<One, Three, Two>, dag::node<Two>, dag::node<Three>>;
+using three_nodes = dag::graph<dag::node<One(Three, Two)>, dag::node<Two()>, dag::node<Three()>>;
 
 static_assert(std::is_same_v<dag::roots<three_nodes>, set::types<Two, Three>>, "");

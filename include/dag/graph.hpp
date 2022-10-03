@@ -15,7 +15,8 @@
 
 namespace dag
 {
-template <typename tag_t, typename... predecessors_t> struct node
+template <typename signature> struct node;
+template <typename tag_t, typename... predecessors_t> struct node<tag_t(predecessors_t...)>
 {
     static_assert(!(std::is_same_v<tag_t, predecessors_t> || ...), "tag_t must not appear in predecessors_t...");
 

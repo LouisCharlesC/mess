@@ -10,11 +10,9 @@
 struct One;
 struct Two;
 struct Three;
-struct Four;
-struct Five;
 
-using caret_graph = dag::graph<dag::node<One>, dag::node<Two, One>, dag::node<Three, One>>;
+using graph = dag::graph<dag::node<One()>, dag::node<Two(One)>, dag::node<Three(One)>>;
 
-static_assert(dag::index_of<caret_graph, One> == 0, "");
-static_assert(dag::index_of<caret_graph, Two> == 1, "");
-static_assert(dag::index_of<caret_graph, Three> == 2, "");
+static_assert(dag::index_of<graph, One> == 0, "");
+static_assert(dag::index_of<graph, Two> == 1, "");
+static_assert(dag::index_of<graph, Three> == 2, "");

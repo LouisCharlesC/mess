@@ -48,7 +48,7 @@ struct bottom;
 
 TEST_CASE("One node")
 {
-    auto one_node = datapath::make_graph(datapath::make_node<top>(func<int>));
+    auto one_node = datapath::make_graph(datapath::make_node<top()>(func<int>));
     // dag::graph<top, mess::arg_predecessors<>, mess::other_predecessors<>, mess::successors<>>(func<uint>));
 }
 

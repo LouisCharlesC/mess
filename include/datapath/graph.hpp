@@ -11,8 +11,9 @@
 
 namespace datapath
 {
+template <typename invocable_type_t, typename signature> struct node;
 template <typename invocable_type_t, typename tag_t, typename... predecessors_t>
-struct node : dag::node<tag_t, predecessors_t...>
+struct node<invocable_type_t, tag_t(predecessors_t...)> : dag::node<tag_t(predecessors_t...)>
 {
     using invocable_type = invocable_type_t;
 
@@ -29,8 +30,8 @@ struct node : dag::node<tag_t, predecessors_t...>
 // template <typename flat_graph, std::size_t index>
 // using successor_indexes = to_indexes<flat_graph, typename std::tuple_element_t<index, flat_graph>::successor_tags>;
 
-template <typename tag, typename... predecessors_t, typename invocable_type>
-constexpr node<invocable_type, tag, predecessors_t...> make_node(invocable_type &&invocable)
+template <typename signature, typename invocable_type>
+constexpr node<invocable_type, signature> make_node(invocable_type &&invocable)
 {
     return {.invocable = std::forward<invocable_type>(invocable)};
 }
