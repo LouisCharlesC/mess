@@ -9,7 +9,7 @@
 
 #include "graph.hpp"
 #include "tag_index.hpp"
-#include <set/concatenate.hpp>
+#include <set/disjunction.hpp>
 
 #include <tuple>
 #include <type_traits>
@@ -25,7 +25,7 @@ template <template <typename...> typename graph, Node... nodes>
 requires Graph<graph<nodes...>>
 struct roots<graph<nodes...>>
 {
-    using type = set::concatenate<std::conditional_t<is_root<nodes>, set::types<typename nodes::tag>, set::types<>>...>;
+    using type = set::disjunction<std::conditional_t<is_root<nodes>, set::types<typename nodes::tag>, set::types<>>...>;
 };
 } // namespace details
 

@@ -26,7 +26,7 @@ set(tests_SRC
 	tests_main.cpp
 	set/types.cpp
 	set/contains.cpp
-	set/concatenate.cpp
+	set/disjunction.cpp
 	dag/graph.cpp
 	dag/tags.cpp
 	dag/tag_index.cpp

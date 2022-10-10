@@ -25,7 +25,7 @@ struct node<invocable_type_t, tag_t(predecessors_t...)> : dag::node<tag_t(predec
 //     to_indexes<flat_graph, typename std::tuple_element_t<index, flat_graph>::arg_predecessor_tags>;
 // template <typename flat_graph, std::size_t index>
 // using unordered_predecessor_indexes =
-//     concatenate<arg_predecessor_indexes<flat_graph, index>,
+//     disjunction<arg_predecessor_indexes<flat_graph, index>,
 //                 to_indexes<flat_graph, typename std::tuple_element_t<index, flat_graph>::other_predecessor_tags>>;
 // template <typename flat_graph, std::size_t index>
 // using successor_indexes = to_indexes<flat_graph, typename std::tuple_element_t<index, flat_graph>::successor_tags>;

@@ -13,7 +13,7 @@
 
 #include <mess/kit_customizer.hpp>
 #include <mess/latches/ready.hpp>
-#include <mess/meta/concatenate.hpp>
+#include <mess/meta/disjunction.hpp>
 #include <mess/meta/invoke_result.hpp>
 #include <mess/meta/leaf_nodes.hpp>
 #include <mess/meta/ordered_predecessors.hpp>

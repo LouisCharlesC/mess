@@ -9,21 +9,21 @@
 
 struct One;
 
-static_assert(set::is_unique<int, int, float>, "");
-static_assert(set::is_unique<int, float, int>, "");
-static_assert(set::is_unique<int, float, int, double>, "");
-static_assert(!set::is_unique<int, float>, "");
-static_assert(!set::is_unique<int, int, float, int>, "");
-static_assert(!set::is_unique<int, float, int, int>, "");
+static_assert(set::details::is_unique<int, int, float>, "");
+static_assert(set::details::is_unique<int, float, int>, "");
+static_assert(set::details::is_unique<int, float, int, double>, "");
+static_assert(!set::details::is_unique<int, float>, "");
+static_assert(!set::details::is_unique<int, int, float, int>, "");
+static_assert(!set::details::is_unique<int, float, int, int>, "");
 
-static_assert(set::all_unique<int, float, double>, "");
-static_assert(!set::all_unique<int, int, float, int>, "");
-static_assert(!set::all_unique<float, int, int>, "");
-static_assert(!set::all_unique<float, double, int, int, double>, "");
+static_assert(set::details::all_unique<int, float, double>, "");
+static_assert(!set::details::all_unique<int, int, float, int>, "");
+static_assert(!set::details::all_unique<float, int, int>, "");
+static_assert(!set::details::all_unique<float, double, int, int, double>, "");
 
-static_assert(set::is_type_set<std::tuple<One>>, "");
-static_assert(set::is_type_set<std::tuple<int, float, double>>, "");
-static_assert(!set::is_type_set<std::tuple<int, int, float, int>>, "");
-static_assert(!set::is_type_set<std::tuple<float, int, int>>, "");
-static_assert(!set::is_type_set<std::tuple<float, double, int, int, double>>, "");
-static_assert(!set::is_type_set<float>, "");
+static_assert(set::is_types<std::tuple<One>>, "");
+static_assert(set::is_types<std::tuple<int, float, double>>, "");
+static_assert(!set::is_types<std::tuple<int, int, float, int>>, "");
+static_assert(!set::is_types<std::tuple<float, int, int>>, "");
+static_assert(!set::is_types<std::tuple<float, double, int, int, double>>, "");
+static_assert(!set::is_types<float>, "");

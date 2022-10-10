@@ -12,19 +12,22 @@
 
 namespace set
 {
-template <typename unique, typename... types>
-constexpr bool is_unique = (static_cast<std::size_t>(std::is_same_v<unique, types>) + ...) == 1;
-template <typename... types> constexpr bool all_unique = (is_unique<types, types...> && ...);
+namespace details
+{
+template <typename unique, typename... Ts>
+constexpr bool is_unique = (static_cast<std::size_t>(std::is_same_v<unique, Ts>) + ...) == 1;
+template <typename... Ts> constexpr bool all_unique = (is_unique<Ts, Ts...> && ...);
+} // namespace details
 
 template <typename... Ts>
-requires all_unique<Ts...>
+requires details::all_unique<Ts...>
 using types = std::tuple<Ts...>;
 
-template <typename type> constexpr bool is_type_set = false;
-template <typename... types> constexpr bool is_type_set<set::types<types...>> = true;
+template <typename type> constexpr bool is_types = false;
+template <typename... Ts> constexpr bool is_types<set::types<Ts...>> = true;
 
 template <typename T>
-concept TypeSet = is_type_set<T>;
+concept Types = is_types<T>;
 
 template <std::size_t index> using index_constant = std::integral_constant<std::size_t, index>;
 template <std::size_t... Is> using indexes = set::types<index_constant<Is>...>;

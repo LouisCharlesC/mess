@@ -11,5 +11,5 @@
 
 namespace mess
 {
-template <typename... sequences_t> using concatenate = decltype((std::declval<sequences_t>() + ...));
+template <typename... sequences_t> using disjunction = decltype((std::declval<sequences_t>() + ...));
 } // namespace mess

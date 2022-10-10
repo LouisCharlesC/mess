@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "concatenate.hpp"
 #include "contains.hpp"
+#include "disjunction.hpp"
 #include "find.hpp"
 #include "root_nodes.hpp"
 #include <mess/graph.hpp>
@@ -76,7 +76,7 @@ template <typename flat_graph, std::size_t index, std::size_t... ordered>
 consteval auto ordered_predecessors(indexes<ordered...>)
 {
     using predecessors = unordered_predecessor_indexes<flat_graph, index>;
-    return concatenate<
+    return disjunction<
         std::conditional_t<contains(indexes<ordered>(), predecessors()), indexes<ordered>, indexes<>>...>();
 }
 } // namespace details
