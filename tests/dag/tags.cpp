@@ -11,7 +11,9 @@ struct One;
 struct Two;
 struct Three;
 
-using caret_graph = dag::graph<dag::node<One()>, dag::node<Two(One)>, dag::node<Three(One)>>;
-
-static_assert(std::is_same_v<dag::tags<caret_graph>, set::types<One, Two, Three>>, "");
-// static_assert(std::is_same_v<dag::node<One, Two, Three>::predecessors, type_set::type_set<Two, Three>>, "");
+static_assert(std::is_same_v<dag::tags<dag::graph<dag::node<One()>, dag::node<Two(One)>, dag::node<Three(One)>>>,
+                             types::set<One, Two, Three>>,
+              "");
+static_assert(std::is_same_v<dag::tags<dag::graph<dag::node<Two(Three)>, dag::node<One()>, dag::node<Three(One)>>>,
+                             types::set<Two, One, Three>>,
+              "");

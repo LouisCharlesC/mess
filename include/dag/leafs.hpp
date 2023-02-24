@@ -35,6 +35,6 @@ struct leafs<graph<nodes...>>
 
 template <Graph graph> using leafs = typename details::leafs<graph>::type;
 
-template <Graph graph, set::Types reachable_from>
-using reachable_leafs = set::filter<leafs<graph>, is_descendant<graph, reachable_from, leafs<graph>>>;
+// template <Graph graph, set::Types reachable_from>
+// using reachable_leafs = set::filter<leafs<graph>, is_descendant<graph, reachable_from, leafs<graph>>>;
 } // namespace dag

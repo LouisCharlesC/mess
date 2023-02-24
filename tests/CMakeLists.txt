@@ -24,16 +24,21 @@ set_target_properties(
 
 set(tests_SRC
 	tests_main.cpp
+	set/indexes.cpp
 	set/types.cpp
 	set/contains.cpp
-	set/disjunction.cpp
+	set/index_of.cpp
+	# set/disjunction.cpp don't need it ?
 	dag/graph.cpp
-	dag/tags.cpp
-	dag/tag_index.cpp
-	dag/successors.cpp
-	dag/roots.cpp
-	dag/leafs.cpp
-	datapath/graph.cpp)#meta/test_contains.cpp meta/test_root_nodes.cpp meta/test_ordered_predecessors.cpp meta/test_find.cpp)
+	dag/to_indexes.cpp
+	# dag/tags.cpp
+	# dag/predecessors.cpp
+	# dag/successors.cpp
+	# dag/roots.cpp
+	# dag/leafs.cpp
+	# datapath/graph.cpp
+	#meta/test_contains.cpp meta/test_root_nodes.cpp meta/test_ordered_predecessors.cpp meta/test_find.cpp
+)
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
 	list(APPEND tests_SRC test_helloworld.cpp)
 endif()

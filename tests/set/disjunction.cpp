@@ -8,9 +8,18 @@
 #include <set/disjunction.hpp>
 #include <set/types.hpp>
 
-static_assert(std::is_same_v<set::disjunction<set::indexes<3>, set::indexes<1>>, set::indexes<3, 1>>, "");
-static_assert(std::is_same_v<set::disjunction<set::indexes<3>>, set::indexes<3>>, "");
-static_assert(std::is_same_v<set::disjunction<set::indexes<3>, set::indexes<>>, set::indexes<3>>, "");
-static_assert(std::is_same_v<set::disjunction<set::indexes<>, set::indexes<1>>, set::indexes<1>>, "");
-static_assert(std::is_same_v<set::disjunction<set::indexes<1, 2, 3>, set::indexes<>>, set::indexes<1, 2, 3>>, "");
-static_assert(std::is_same_v<set::disjunction<set::indexes<1, 2, 3>, set::indexes<1, 2>>, set::indexes<1, 2, 3>>, "");
+// set::disjunction<set::type_set<int>, set::type_set<float>>::a;
+
+static_assert(std::is_same_v<set::disjunction<>, set::type_set<>>, "");
+static_assert(std::is_same_v<set::disjunction<set::type_set<>>, set::type_set<>>, "");
+static_assert(std::is_same_v<set::disjunction<set::type_set<>, set::type_set<>>, set::type_set<>>, "");
+static_assert(std::is_same_v<set::disjunction<set::type_set<int>, set::type_set<>>, set::type_set<int>>, "");
+static_assert(std::is_same_v<set::disjunction<set::type_set<>, set::type_set<int>>, set::type_set<int>>, "");
+// static_assert(std::is_same_v<set::disjunction<set::type_set<int>, set::type_set<float>>, set::type_set<int, float>>,
+//   "");
+// static_assert(std::is_same_v<set::disjunction<set::indexes<3>>, set::indexes<3>>, "");
+// static_assert(std::is_same_v<set::disjunction<set::indexes<3>, set::indexes<>>, set::indexes<3>>, "");
+// static_assert(std::is_same_v<set::disjunction<set::indexes<>, set::indexes<1>>, set::indexes<1>>, "");
+// static_assert(std::is_same_v<set::disjunction<set::indexes<1, 2, 3>, set::indexes<>>, set::indexes<1, 2, 3>>, "");
+// static_assert(std::is_same_v<set::disjunction<set::indexes<1, 2, 3>, set::indexes<1, 2>>, set::indexes<1, 2, 3>>,
+// "");

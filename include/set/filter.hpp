@@ -7,14 +7,9 @@
 
 #pragma once
 
-#include "graph.hpp"
-#include <set/types.hpp>
+#include "types.hpp"
 
-namespace dag
+namespace set
 {
-namespace details
-{
-} // namespace details
 
-template <Graph graph> using tags = typename details::tags<graph>::type;
-} // namespace dag
+} // namespace set

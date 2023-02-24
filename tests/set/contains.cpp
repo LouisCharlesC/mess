@@ -6,9 +6,11 @@
 // https://opensource.org/licenses/MIT.
 
 #include <set/contains.hpp>
-#include <set/types.hpp>
+#include <set/indexes.hpp>
 
-static_assert(set::contains<int, set::types<int, float>>, "");
-static_assert(set::contains<set::types<int, float>, float, int>, "");
-static_assert(!set::contains<set::types<float>, int>, "");
-static_assert(!set::contains<set::types<int>, set::types<float>>, "");
+static_assert(indexes::contains(indexes::set<2ul, 1ul>, indexes::set<1ul>), "");
+static_assert(indexes::contains(indexes::set<1ul, 2ul>, indexes::set<2ul>), "");
+static_assert(indexes::contains(indexes::set<1ul, 2ul, 4ul>, indexes::set<>), "");
+static_assert(!indexes::contains(indexes::set<1ul, 2ul>, indexes::set<3ul, 1ul>), "");
+static_assert(!indexes::contains(indexes::set<>, indexes::set<3ul>), "");
+static_assert(!indexes::contains(indexes::set<>, indexes::set<>), "");

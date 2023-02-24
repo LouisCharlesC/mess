@@ -18,29 +18,25 @@
 #include <memory>
 #include <thread>
 
-template <std::size_t index>
-char func(int in)
+template <std::size_t index> char func(int in)
 {
-  std::cout << "s " << index << std::endl;
-  std::this_thread::sleep_for(std::chrono::milliseconds(in * 200));
-  std::cout << "e " << index << ": " << in << std::endl;
-  return in;
+    std::cout << "s " << index << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(in * 200));
+    std::cout << "e " << index << ": " << in << std::endl;
+    return in;
 }
 
-template <std::size_t index>
-double func_0()
+template <std::size_t index> double func_0()
 {
-  return func<index>(1);
+    return func<index>(1);
 }
-template <std::size_t index>
-float func_1(int in)
+template <std::size_t index> float func_1(int in)
 {
-  return func<index>(in + 1);
+    return func<index>(in + 1);
 }
-template <std::size_t index>
-char func_2(int lhs, int rhs)
+template <std::size_t index> char func_2(int lhs, int rhs)
 {
-  return func<index>(lhs + rhs + 1);
+    return func<index>(lhs + rhs + 1);
 }
 
 //     7
@@ -59,37 +55,28 @@ char func_2(int lhs, int rhs)
 
 int main()
 {
-  auto graph = mess::make_graph(
-      mess::make_node<0, mess::arg_predecessors<4>, mess::other_predecessors<>,
-                      mess::successors<5>>(func_1<0>),
-      mess::make_node<1, mess::arg_predecessors<7>, mess::other_predecessors<>,
-                      mess::successors<2, 3>>(func_1<1>),
-      mess::make_node<2, mess::arg_predecessors<1, 6>, mess::other_predecessors<>,
-                      mess::successors<4>>(func_2<2>),
-      mess::make_node<3, mess::arg_predecessors<1>, mess::other_predecessors<>,
-                      mess::successors<4>>(func_1<3>),
-      mess::make_node<4, mess::arg_predecessors<2, 3>, mess::other_predecessors<>,
-                      mess::successors<8, 0>>(func_2<4>),
-      mess::make_node<5, mess::arg_predecessors<0>, mess::other_predecessors<>,
-                      mess::successors<>>(func_1<5>),
-      mess::make_node<6, mess::arg_predecessors<>, mess::other_predecessors<>,
-                      mess::successors<2>>(func_0<6>),
-      mess::make_node<7, mess::arg_predecessors<>, mess::other_predecessors<>,
-                      mess::successors<1>>(func_0<7>),
-      mess::make_node<8, mess::arg_predecessors<4>, mess::other_predecessors<>,
-                      mess::successors<>>(func_1<8>));
-  // auto graph = mess::make_graph(mess::make_node<mess::arg_predecessors<>,
-  // mess::other_predecessors<>, mess::successors<>>(func_0));
+    auto graph = mess::make_graph(
+        mess::make_node<0, mess::arg_predecessors<4>, mess::other_predecessors<>, mess::successors<5>>(func_1<0>),
+        mess::make_node<1, mess::arg_predecessors<7>, mess::other_predecessors<>, mess::successors<2, 3>>(func_1<1>),
+        mess::make_node<2, mess::arg_predecessors<1, 6>, mess::other_predecessors<>, mess::successors<4>>(func_2<2>),
+        mess::make_node<3, mess::arg_predecessors<1>, mess::other_predecessors<>, mess::successors<4>>(func_1<3>),
+        mess::make_node<4, mess::arg_predecessors<2, 3>, mess::other_predecessors<>, mess::successors<8, 0>>(func_2<4>),
+        mess::make_node<5, mess::arg_predecessors<0>, mess::other_predecessors<>, mess::successors<>>(func_1<5>),
+        mess::make_node<6, mess::arg_predecessors<>, mess::other_predecessors<>, mess::successors<2>>(func_0<6>),
+        mess::make_node<7, mess::arg_predecessors<>, mess::other_predecessors<>, mess::successors<1>>(func_0<7>),
+        mess::make_node<8, mess::arg_predecessors<4>, mess::other_predecessors<>, mess::successors<>>(func_1<8>));
+    // auto graph = mess::make_graph(mess::make_node<mess::arg_predecessors<>,
+    // mess::other_predecessors<>, mess::successors<>>(func_0));
 
-  // using scheduler_type = mess::inline_scheduler;
-  using scheduler_type = mess::std_thread_scheduler;
-  using frame_type = mess::frame_type<scheduler_type, decltype(graph)>;
-  scheduler_type scheduler;
-  frame_type frame(scheduler, graph);
+    // using scheduler_type = mess::inline_scheduler;
+    using scheduler_type = mess::std_thread_scheduler;
+    using frame_type = mess::frame_type<scheduler_type, decltype(graph)>;
+    scheduler_type scheduler;
+    frame_type frame(scheduler, graph);
 
-  mess::run(frame);
-  scheduler.join();
-  mess::run(std::make_unique<frame_type>(scheduler, graph));
+    mess::run(frame);
+    scheduler.join();
+    mess::run(std::make_unique<frame_type>(scheduler, graph));
 }
 
 // Set CI back up
@@ -99,7 +86,6 @@ int main()
 // hide private stuff from documentation, document public stuff.
 // comment stuff ? better sort between details or not ? try to hide stuff more.
 // Rerun to reuse frame ?
-// frame should be mostly private, and only allow access to result (then friend every function that needs access), that would be neat!
-// if all successors only have one predecessor, do not store the result and feed it directly ?
-// remove input successors?
-// scheduler can tell if it was stopped
+// frame should be mostly private, and only allow access to result (then friend every function that needs access), that
+// would be neat! if all successors only have one predecessor, do not store the result and feed it directly ? scheduler
+// can tell if it was stopped

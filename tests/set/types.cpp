@@ -7,23 +7,32 @@
 
 #include <set/types.hpp>
 
-struct One;
+static_assert(types::is_unique<int, int, float>, "");
+static_assert(types::is_unique<int, float, int>, "");
+static_assert(types::is_unique<int, float, int, double>, "");
+static_assert(!types::is_unique<int, float>, "");
+static_assert(!types::is_unique<int, int, float, int>, "");
+static_assert(!types::is_unique<int, float, int, int>, "");
 
-static_assert(set::details::is_unique<int, int, float>, "");
-static_assert(set::details::is_unique<int, float, int>, "");
-static_assert(set::details::is_unique<int, float, int, double>, "");
-static_assert(!set::details::is_unique<int, float>, "");
-static_assert(!set::details::is_unique<int, int, float, int>, "");
-static_assert(!set::details::is_unique<int, float, int, int>, "");
+static_assert(types::all_unique<>, "");
+static_assert(types::all_unique<int, float, double>, "");
+static_assert(!types::all_unique<int, int, float, int>, "");
+static_assert(!types::all_unique<float, int, int>, "");
+static_assert(!types::all_unique<float, double, int, int, double>, "");
 
-static_assert(set::details::all_unique<int, float, double>, "");
-static_assert(!set::details::all_unique<int, int, float, int>, "");
-static_assert(!set::details::all_unique<float, int, int>, "");
-static_assert(!set::details::all_unique<float, double, int, int, double>, "");
+static_assert(types::all_unique<std::tuple<>>, "");
+static_assert(types::all_unique<std::tuple<int, float, double>>, "");
+static_assert(!types::all_unique<std::tuple<int, int, float, int>>, "");
+static_assert(!types::all_unique<std::tuple<float, int, int>>, "");
+static_assert(!types::all_unique<std::tuple<float, double, int, int, double>>, "");
 
-static_assert(set::is_types<std::tuple<One>>, "");
-static_assert(set::is_types<std::tuple<int, float, double>>, "");
-static_assert(!set::is_types<std::tuple<int, int, float, int>>, "");
-static_assert(!set::is_types<std::tuple<float, int, int>>, "");
-static_assert(!set::is_types<std::tuple<float, double, int, int, double>>, "");
-static_assert(!set::is_types<float>, "");
+static_assert(types::details::is_tuple_like<std::tuple<>>, "");
+static_assert(types::details::is_tuple_like<std::tuple<double>>, "");
+static_assert(!types::details::is_tuple_like<double>, "");
+
+static_assert(types::Set<std::tuple<>>, "");
+static_assert(types::Set<std::tuple<int, float, double>>, "");
+static_assert(!types::Set<std::tuple<int, int, float, int>>, "");
+static_assert(!types::Set<std::tuple<float, int, int>>, "");
+static_assert(!types::Set<std::tuple<float, double, int, int, short>>, "");
+static_assert(!types::Set<float>, "");

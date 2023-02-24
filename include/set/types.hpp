@@ -10,25 +10,34 @@
 #include <tuple>
 #include <type_traits>
 
-namespace set
-{
-namespace details
+namespace types
 {
 template <typename unique, typename... Ts>
 constexpr bool is_unique = (static_cast<std::size_t>(std::is_same_v<unique, Ts>) + ...) == 1;
+
+// Base template, returns true if all Ts are unique.
 template <typename... Ts> constexpr bool all_unique = (is_unique<Ts, Ts...> && ...);
+// Specialization to get the Ts out of template, delegates to the base template.
+template <template <typename...> typename T, typename... Ts> constexpr bool all_unique<T<Ts...>> = all_unique<Ts...>;
+
+namespace details
+{
+// Base template, returns false.
+template <typename> constexpr bool is_tuple_like = false;
+// Specialization for std::tuple, return true.
+template <template <typename...> typename T, typename... Ts> constexpr bool is_tuple_like<T<Ts...>> = true;
 } // namespace details
 
-template <typename... Ts>
-requires details::all_unique<Ts...>
-using types = std::tuple<Ts...>;
-
-template <typename type> constexpr bool is_types = false;
-template <typename... Ts> constexpr bool is_types<set::types<Ts...>> = true;
-
+// Concept of a set of unique types.
 template <typename T>
-concept Types = is_types<T>;
+concept Set = details::is_tuple_like<T> && all_unique<T>;
 
-template <std::size_t index> using index_constant = std::integral_constant<std::size_t, index>;
-template <std::size_t... Is> using indexes = set::types<index_constant<Is>...>;
-} // namespace set
+// A set of unique types.
+template <typename... Ts>
+requires Set<std::tuple<Ts...>>
+using set = std::tuple<Ts...>;
+
+// Helpers to hide the std::tuple implementation.
+template <Set type_set_> constexpr std::size_t size = std::tuple_size_v<type_set_>;
+template <std::size_t index, Set type_set_> using at = std::tuple_element_t<index, type_set_>;
+} // namespace types
