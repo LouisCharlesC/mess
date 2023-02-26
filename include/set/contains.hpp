@@ -16,8 +16,8 @@ namespace indexes
 {
 template <std::size_t N, std::size_t M> constexpr bool contains(indexes::array<N> containing, array<M> contained)
 {
-    return std::search(containing.cbegin(), containing.cend(), contained.cbegin(), contained.cend()) !=
-           containing.cend();
+    return (N == 0 && M == 0) || std::search(containing.cbegin(), containing.cend(), contained.cbegin(),
+                                             contained.cend()) != containing.cend();
 }
 } // namespace indexes
 
@@ -31,12 +31,12 @@ template <typename...> constexpr struct fail contains;
 
 // single contained type with containing type_set.
 template <typename contained_type, template <typename...> typename containing, typename... containing_types>
-requires(Set<containing<containing_types...>>)
+requires(Set<containing<containing_types...>> && !Set<contained_type>)
 constexpr bool contains<containing<containing_types...>, contained_type> =
     (std::is_same_v<contained_type, containing_types> || ...);
 
 // contained type_set with containing type_set
 template <template <typename...> typename contained, typename... contained_types, Set containing>
-requires(Set<contained<contained_types...>>)
+requires(Set<containing> && Set<contained<contained_types...>>)
 constexpr bool contains<containing, contained<contained_types...>> = (contains<containing, contained_types> && ...);
 } // namespace types

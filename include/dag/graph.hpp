@@ -64,4 +64,6 @@ concept Graph = types::Set<T> && details::all_nodes<T> && details::tags_unique<T
 template <Node... nodes_>
 requires Graph<types::set<nodes_...>>
 using graph = types::set<nodes_...>;
+
+template <Node... nodes> using tags = types::set<typename nodes::tag...>;
 } // namespace dag

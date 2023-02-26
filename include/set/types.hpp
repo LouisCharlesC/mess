@@ -40,4 +40,5 @@ using set = std::tuple<Ts...>;
 // Helpers to hide the std::tuple implementation.
 template <Set type_set_> constexpr std::size_t size = std::tuple_size_v<type_set_>;
 template <std::size_t index, Set type_set_> using at = std::tuple_element_t<index, type_set_>;
+template <auto... values> constexpr auto make = std::make_tuple(values...);
 } // namespace types

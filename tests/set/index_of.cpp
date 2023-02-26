@@ -16,7 +16,7 @@ using one_two_three = types::set<One, Two, Three>;
 using one_three = types::set<One, Three>;
 
 static_assert(types::index_of<one_two_three, One> == 0, "");
-// static_assert(types::index_of<one_two_three, Two> == 1, "");
-// static_assert(types::index_of<one_two_three, Three> == 2, "");
+static_assert(types::index_of<one_two_three, Two> == 1, "");
+static_assert(types::index_of<one_two_three, Three> == 2, "");
 
-// static_assert(types::to_indexes<one_two_three, one_three> == indexes::set<0, 2>, "");
+static_assert(types::to_indexes<one_two_three, one_three> == indexes::set<0, 2>, "");
