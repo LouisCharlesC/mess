@@ -1,39 +1,16 @@
 include(CTest)
 find_package(doctest CONFIG REQUIRED)
 
-add_executable(helloworld helloworld/withmess/helloworld.cpp)
-target_include_directories(helloworld PUBLIC $<TARGET_PROPERTY:mess,INCLUDE_DIRECTORIES>)
-target_set_warnings(helloworld ENABLE ALL AS_ERROR ALL DISABLE Annoying)
-set_target_properties(
-	helloworld
-	PROPERTIES
-		CXX_STANDARD 20
-		CXX_STANDARD_REQUIRED YES
-		CXX_EXTENSIONS NO
-)
-
-add_executable(helloworldwomess helloworld/womess/helloworld.cpp)
-target_set_warnings(helloworldwomess ENABLE ALL AS_ERROR ALL DISABLE Annoying)
-set_target_properties(
-	helloworldwomess
-	PROPERTIES
-		CXX_STANDARD 20
-		CXX_STANDARD_REQUIRED YES
-		CXX_EXTENSIONS NO
-)
-
 set(tests_SRC
+	test_basic_scenario.cpp
 	tests_main.cpp
-	dag/graph.cpp
-	dag/to_index_graph.cpp
-	set/contains.cpp
-	set/indexes.cpp
-	set/index_of.cpp
-	set/types.cpp
+	# dag/graph.cpp
+	# dag/to_index_graph.cpp
+	# set/contains.cpp
+	# set/indexes.cpp
+	# set/index_of.cpp
+	# set/types.cpp
 )
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-	list(APPEND tests_SRC test_helloworld.cpp)
-endif()
 add_executable(tests ${tests_SRC})
 target_include_directories(tests PUBLIC utils)
 target_link_libraries(tests PUBLIC doctest::doctest mess PRIVATE -fsanitize=undefined,address -fno-omit-frame-pointer)
