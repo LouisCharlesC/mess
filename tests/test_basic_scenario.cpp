@@ -12,7 +12,7 @@ struct Left;
 struct Right;
 struct Bottom;
 
-using namespace dpath::builders;
+using namespace dpath;
 
 struct One
 {
@@ -51,9 +51,14 @@ Four bottom(Two, Three)
 //    bottom
 
 // auto allo = node<Top()>(top);
-auto diamond =
-    graph(node<Top()>(top), node<Left(Top)>(left), node<Right(Top)>(right), node<Bottom(Left, Right)>(bottom));
+auto upper_left_diamond = make::graph(make::node<Top()>(top), make::node<Left(Top)>(left));
+auto lower_right_diamond = make::graph(make::node<Right(Top)>(right), make::node<Bottom(Left, Right)>(bottom));
+auto diamond = make::graph(upper_left_diamond, lower_right_diamond);
 
-auto promise = diamond.run(executor);
+// it does not return anything. If you want to cancel from outside: use the executor. If you want to customize what
+// kind of execution fancy thing you wanna do, that's also on the executor.
+// Can the executor also keep everything alive ? Like it's a task they execute... no unique pointer shenanigans. No,
+// that would require waiting
 
-promise.detach();
+// mess::async(graph, executor);
+// auto frame = mess::run(graph, executor);

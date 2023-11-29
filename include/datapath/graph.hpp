@@ -15,8 +15,10 @@ namespace dpath
 {
 // Node of a directed acyclic datapath
 template <typename signature, typename invocable_t> struct node;
-template <typename tag, typename... predecessors, typename invocable_t> class node<tag(predecessors...), invocable_t>
+template <typename tag_t, typename... predecessors, typename invocable_t>
+class node<tag_t(predecessors...), invocable_t>
 {
+    using tag = tag_t;
     // dag::node will check everything we can.
     // using dag_node = dag::node<tag(predecessors...)>;
 
@@ -30,22 +32,11 @@ template <typename tag, typename... predecessors, typename invocable_t> class no
     invocable_t _invocable;
 };
 
-struct promise
-{
-    void detach()
-    {
-    }
-};
-
 template <typename... nodes> struct graph
 {
-    promise run()
-    {
-        return promise();
-    }
-}; // = types::set<nodes...>;
+};
 
-namespace builders
+namespace make
 {
 template <typename signature, typename invocable_t> auto node(invocable_t &&invocable)
 {
@@ -55,6 +46,9 @@ template <typename... nodes> auto graph(nodes &&...)
 {
     return dpath::graph<nodes...>();
 }
-} // namespace builders
-
+template <typename... graphs> auto graph(graphs &&...)
+{
+    return dpath::graph<concatenate<graphs...>>();
+}
+} // namespace make
 } // namespace dpath
